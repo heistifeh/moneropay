@@ -1,26 +1,44 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --color-pumpkin-50: #fff4ed;
+  --color-pumpkin-100: #ffe6d5;
+  --color-pumpkin-200: #feccaa;
+  --color-pumpkin-300: #fdac74;
+  --color-pumpkin-400: #fb8a3c;
+  --color-pumpkin-500: #f97316;
+  --color-pumpkin-600: #ea670c;
+  --color-pumpkin-700: #c2570c;
+  --color-pumpkin-800: #9a4a12;
+  --color-pumpkin-900: #7c3d12;
+  --color-pumpkin-950: #432007;
+  --color-black-50: #f6f6f6;
+  --color-black-100: #e7e7e7;
+  --color-black-200: #d1d1d1;
+  --color-black-300: #b0b0b0;
+  --color-black-400: #888888;
+  --color-black-500: #6d6d6d;
+  --color-black-600: #5d5d5d;
+  --color-black-700: #4f4f4f;
+  --color-black-800: #454545;
+  --color-black-900: #3d3d3d;
+  --color-black-950: #00000000;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* @layer utilities {
+  .bg-pumpkin-hero {
+    background-image: linear-gradient(
+        to bottom right,
+        var(--color-pumpkin-700),
+        var(--color-pumpkin-950)
+      ),
+      url("/main-bg.webp");
+    background-repeat: no-repeat;
+    background-size: 220%;
+    background-position: center;
   }
-}
+} */
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-poppins), sans-serif;
 }
