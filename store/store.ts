@@ -1,6 +1,7 @@
 // src/store/store.ts
 import { create } from "zustand";
 
+import { ASSET_BY_ID } from "@/lib/constants";
 // ---- Types ----
 export type Step = "quote" | "address" | "summary";
 export type TxStatus =
@@ -13,15 +14,19 @@ export type TxStatus =
   | "failed";
 
 export type Quote = {
-  id: string;                          // local id (or backend id)
-  fromId: string;                      // CoinGecko id (e.g., "tether")
-  toId: string;                        // CoinGecko id (e.g., "solana")
-  amountIn: number;                    // user entered amount (FROM token)
-  rate: number;                        // TO per 1 FROM at lock time
-  amountOut: number;                   // amountIn * rate
+  id: string; // local id (or backend id)
+  fromId: string; // CoinGecko id (e.g., "tether")
+  toId: string; // CoinGecko id (e.g., "solana")
+  fromSymbol: string; // snapshot at quote time (e.g., "USDT")
+  toSymbol: string; // snapshot at quote time (e.g., "SOL")
+  fromName: string; // 👈 add this
+  toName: string; // 👈 add this
+  amountIn: number; // user entered amount (FROM token)
+  rate: number; // TO per 1 FROM at lock time
+  amountOut: number; // amountIn * rate
   pricesSnapshot: Record<string, number>; // usd snapshot used for this quote
-  createdAt: number;                   // ms
-  expiresAt: number;                   // ms (createdAt + 10min by default)
+  createdAt: number; // ms
+  expiresAt: number; // ms (createdAt + 10min by default)
 };
 
 type FlowState = {
@@ -29,13 +34,13 @@ type FlowState = {
   step: Step;
 
   // Selections
-  fromSymbol: string;   // e.g., "USDT"
-  toSymbol: string;     // e.g., "SOL"
-  amountIn: string;     // keep as string for friendly typing
+  fromSymbol: string; // e.g., "USDT"
+  toSymbol: string; // e.g., "SOL"
+  amountIn: string; // keep as string for friendly typing
 
   // Addresses
-  userReceiveAddress?: string;    // where user will receive TO token
-  sellerDepositAddress?: string;  // where user must send FROM token
+  userReceiveAddress?: string; // where user will receive TO token
+  sellerDepositAddress?: string; // where user must send FROM token
 
   // Quote + tx
   quote?: Quote;
@@ -96,13 +101,25 @@ export const useFlow = create<FlowState>((set, get) => ({
     if (i > 0) set({ step: order[i - 1] });
   },
 
-  // lock a quote (snapshot + expiry)
-  createQuote: ({ prices, fromId, toId, amountInNum, ttlMs = 10 * 60 * 1000 }) => {
+  // --- implementation ---
+  createQuote: ({
+    prices,
+    fromId,
+    toId,
+    amountInNum,
+    ttlMs = 10 * 60 * 1000,
+  }) => {
     const fromUsd = prices[fromId];
     const toUsd = prices[toId];
-    if (!fromUsd || !toUsd) throw new Error("Missing prices for selected assets");
+    if (!fromUsd || !toUsd)
+      throw new Error("Missing prices for selected assets");
 
-    const rate = fromUsd / toUsd;        // TO units per 1 FROM
+    // derive names/symbols from your registry
+    const fromMeta = ASSET_BY_ID[fromId];
+    const toMeta = ASSET_BY_ID[toId];
+    if (!fromMeta || !toMeta) throw new Error("Unknown asset id(s) for quote");
+
+    const rate = fromUsd / toUsd; // TO units per 1 FROM
     const amountOut = amountInNum * rate;
     const now = Date.now();
 
@@ -110,6 +127,10 @@ export const useFlow = create<FlowState>((set, get) => ({
       id: `q_${now}`,
       fromId,
       toId,
+      fromSymbol: fromMeta.symbol,
+      toSymbol: toMeta.symbol,
+      fromName: fromMeta.name,
+      toName: toMeta.name,
       amountIn: amountInNum,
       rate,
       amountOut,
