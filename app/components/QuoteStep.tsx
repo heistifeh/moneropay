@@ -19,7 +19,9 @@ import { AssetSelect } from "./ui/assetSelect";
 
 export function QuoteStep() {
   // live prices + status
-  const { prices, lastUpdated, error, reload } = usePrices({ refreshMs: 25_000 });
+  const { prices, lastUpdated, error, reload } = usePrices({
+    refreshMs: 25_000,
+  });
 
   // flow actions
   const { createQuote, next } = useFlow();
@@ -31,7 +33,7 @@ export function QuoteStep() {
 
   // derived ids + prices
   const fromId = ASSET_BY_SYMBOL[fromSymbol].id;
-  const toId   = ASSET_BY_SYMBOL[toSymbol].id;
+  const toId = ASSET_BY_SYMBOL[toSymbol].id;
   const priceA = prices?.[fromId];
   const priceB = prices?.[toId];
 
@@ -48,7 +50,10 @@ export function QuoteStep() {
 
   // validation
   const sameAsset = fromSymbol === toSymbol;
-  const invalidAmount = !amountIn || Number.isNaN(parseFloat(amountIn)) || parseFloat(amountIn) <= 0;
+  const invalidAmount =
+    !amountIn ||
+    Number.isNaN(parseFloat(amountIn)) ||
+    parseFloat(amountIn) <= 0;
   const missingPrices = !Number.isFinite(rate);
   const canExchange = !invalidAmount && !sameAsset && !missingPrices;
 
@@ -91,12 +96,17 @@ export function QuoteStep() {
         viewport={VIEWPORT}
         className="space-y-5"
       >
-        <m.header variants={listItem} className="flex items-center justify-between">
+        <m.header
+          variants={listItem}
+          className="flex items-center justify-between"
+        >
           <h3 className="text-xl font-semibold">Exchange</h3>
           <m.span
             variants={reveal}
             className={`px-3 py-1 rounded-full text-sm ${
-              missingPrices ? "bg-zinc-100 text-zinc-700" : "bg-blue-50 text-blue-700"
+              missingPrices
+                ? "bg-zinc-100 text-zinc-700"
+                : "bg-pumpkin-50 text-pumpkin-700"
             }`}
           >
             {missingPrices ? "Pricing…" : "Live pricing"}
@@ -118,7 +128,9 @@ export function QuoteStep() {
               placeholder="0.00"
               className="flex-1 rounded-xl border border-zinc-200 px-3 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-zinc-300"
               value={amountIn}
-              onChange={(e) => setAmountIn(e.target.value.replace(/[^0-9.]/g, ""))}
+              onChange={(e) =>
+                setAmountIn(e.target.value.replace(/[^0-9.]/g, ""))
+              }
             />
             <m.div variants={reveal}>
               <AssetSelect value={fromSymbol} onChange={setFromSymbol} />
@@ -153,7 +165,9 @@ export function QuoteStep() {
               className="flex-1 rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-lg"
             >
               {amountOut
-                ? Number(amountOut).toLocaleString(undefined, { maximumFractionDigits: 8 })
+                ? Number(amountOut).toLocaleString(undefined, {
+                    maximumFractionDigits: 8,
+                  })
                 : "—"}
             </m.output>
             <m.div variants={reveal}>
@@ -162,9 +176,13 @@ export function QuoteStep() {
           </div>
 
           <m.div variants={reveal} className="mt-2 text-xs text-zinc-500">
-            Rate: 1 {fromSymbol} ≈ {Number.isFinite(rate) ? (rate as number).toFixed(8) : "—"} {toSymbol}
+            Rate: 1 {fromSymbol} ≈{" "}
+            {Number.isFinite(rate) ? (rate as number).toFixed(8) : "—"}{" "}
+            {toSymbol}
             {priceA && priceB && (
-              <span className="ml-2">(${priceA.toLocaleString()} → ${priceB.toLocaleString()})</span>
+              <span className="ml-2">
+                (${priceA.toLocaleString()} → ${priceB.toLocaleString()})
+              </span>
             )}
           </m.div>
 
@@ -191,7 +209,10 @@ export function QuoteStep() {
               exit={{ opacity: 0, y: -6 }}
               className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800"
             >
-              Price feed error: {error}. <button onClick={reload} className="underline">Retry</button>
+              Price feed error: {error}.{" "}
+              <button onClick={reload} className="underline">
+                Retry
+              </button>
             </m.div>
           )}
         </AnimatePresence>
@@ -206,7 +227,9 @@ export function QuoteStep() {
             disabled={!canExchange}
             onClick={onExchange}
             className={`w-full rounded-2xl px-4 py-3 text-lg font-semibold text-white transition ${
-              !canExchange ? "cursor-not-allowed bg-zinc-300" : "bg-blue-600 hover:bg-blue-700"
+              !canExchange
+                ? "cursor-not-allowed bg-zinc-300"
+                : "bg-black-600 hover:bg-black-800 cursor-pointer"
             }`}
             {...press}
           >

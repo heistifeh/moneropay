@@ -24,5 +24,11 @@ export const ASSET_BY_SYMBOL: Record<string, Asset> = ASSETS.reduce(
   {} as Record<string, Asset>
 );
 
+// ✅ id → asset (for createQuote lookups by CoinGecko id)
+export const ASSET_BY_ID: Record<string, Asset> = ASSETS.reduce(
+  (acc, a) => ((acc[a.id] = a), acc),
+  {} as Record<string, Asset>
+);
+
 // ✅ All CoinGecko IDs in one array (for price queries)
 export const ALL_CG_IDS = ASSETS.map(a => a.id);

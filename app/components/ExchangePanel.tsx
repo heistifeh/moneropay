@@ -3,8 +3,13 @@
 import { motion as m } from "framer-motion";
 import { VIEWPORT, blurIn, revealUp, layoutSpring } from "@/utils/animation";
 import { QuoteStep } from "./QuoteStep";
+import AddressStep from "./AddressStep";
+import { useFlow } from "@/store/store";
+import SummaryStep from "./SummaryStep";
+import ProgressBar from "./ui/progressBar";
 
 export default function ExchangePanel() {
+  const step = useFlow((s) => s.step);
   return (
     <m.section
       variants={blurIn}
@@ -27,16 +32,24 @@ export default function ExchangePanel() {
             viewport={VIEWPORT}
             className="border-b border-zinc-200 py-5 text-center"
           >
-            <h2 className="text-lg font-semibold tracking-tight">Crypto Exchange</h2>
-            <p className="text-xs text-zinc-500">Fast quotes. Smooth UX. Live pricing.</p>
+            <h2 className="text-lg font-semibold tracking-tight">
+              Crypto Exchange
+            </h2>
+            <p className="text-xs text-zinc-500">
+              Fast quotes. Smooth UX. Live pricing.
+            </p>
           </m.header>
 
           {/* Exchange Point */}
           <div className="mx-auto max-w-2xl p-4 sm:p-6">
-            <QuoteStep />
+            <ProgressBar />
+            {step === "quote" && <QuoteStep />}
+            {step === "address" && <AddressStep />}
+            {step === "summary" && <SummaryStep />}
           </div>
         </div>
       </m.div>
     </m.section>
   );
 }
+// src/components/ExchangePanel.tsx
