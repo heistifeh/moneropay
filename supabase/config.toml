@@ -1,0 +1,8 @@
+[functions.create-quote]
+verify_jwt = false
+
+[functions.attach-payout-address]
+verify_jwt = false
+
+[functions.user-paid]
+verify_jwt = false
