@@ -12,19 +12,18 @@ import {
 } from "@/utils/animation";
 
 import { usePrices } from "@/hooks/usePrices";
-import { useFlow } from "@/store/store";
 import { ASSET_BY_SYMBOL } from "@/lib/constants";
-import type { PriceMap } from "@/lib/priceTypes";
 import { AssetSelect } from "./ui/assetSelect";
+import { useFlow } from "@/store/store";
 
 export function QuoteStep() {
-  // live prices + status
+  // live prices
   const { prices, lastUpdated, error, reload } = usePrices({
     refreshMs: 25_000,
   });
 
-  // flow actions
-  const { createQuote, next } = useFlow();
+  // zustand actions
+  const { next, createQuote } = useFlow();
 
   // local UI state
   const [fromSymbol, setFromSymbol] = useState("USDT");
@@ -68,19 +67,24 @@ export function QuoteStep() {
     }
   };
 
-  const onExchange = () => {
+  const onExchange = async () => {
     if (!canExchange) return;
     const amountInNum = parseFloat(amountIn);
-    createQuote({
-      prices: prices as PriceMap,
-      fromId,
-      toId,
-      amountInNum,
-    });
-    next(); // advance to Address step
+
+    try {
+      await createQuote({
+        base_symbol: fromSymbol,
+        quote_symbol: toSymbol,
+        chain: "EVM", // 👈 later: make dynamic
+        amount_in: amountInNum,
+      });
+      next(); // advance to Address step
+    } catch (err) {
+      console.error("Failed to create quote", err);
+    }
   };
 
-  // hydration-safe timestamp (client-only)
+  // hydration-safe timestamp
   const [updatedAtLabel, setUpdatedAtLabel] = useState<string>("");
   useEffect(() => {
     if (!lastUpdated) return;
@@ -96,6 +100,7 @@ export function QuoteStep() {
         viewport={VIEWPORT}
         className="space-y-5"
       >
+        {/* HEADER */}
         <m.header
           variants={listItem}
           className="flex items-center justify-between"
@@ -113,7 +118,7 @@ export function QuoteStep() {
           </m.span>
         </m.header>
 
-        {/* You send */}
+        {/* YOU SEND */}
         <m.section
           variants={listItem}
           layout
@@ -138,7 +143,7 @@ export function QuoteStep() {
           </div>
         </m.section>
 
-        {/* Swap */}
+        {/* SWAP */}
         <m.div variants={listItem} className="flex justify-center">
           <m.button
             onClick={onSwap}
@@ -151,7 +156,7 @@ export function QuoteStep() {
           </m.button>
         </m.div>
 
-        {/* You get */}
+        {/* YOU GET */}
         <m.section
           variants={listItem}
           layout
@@ -177,8 +182,7 @@ export function QuoteStep() {
 
           <m.div variants={reveal} className="mt-2 text-xs text-zinc-500">
             Rate: 1 {fromSymbol} ≈{" "}
-            {Number.isFinite(rate) ? (rate as number).toFixed(8) : "—"}{" "}
-            {toSymbol}
+            {Number.isFinite(rate) ? (rate as number).toFixed(8) : "—"} {toSymbol}
             {priceA && priceB && (
               <span className="ml-2">
                 (${priceA.toLocaleString()} → ${priceB.toLocaleString()})
@@ -200,7 +204,7 @@ export function QuoteStep() {
           </AnimatePresence>
         </m.section>
 
-        {/* Error + timestamp */}
+        {/* ERROR + TIMESTAMP */}
         <AnimatePresence>
           {error && (
             <m.div
@@ -229,7 +233,7 @@ export function QuoteStep() {
             className={`w-full rounded-2xl px-4 py-3 text-lg font-semibold text-white transition ${
               !canExchange
                 ? "cursor-not-allowed bg-zinc-300"
-                : "bg-black-600 hover:bg-black-800 cursor-pointer"
+                : "bg-black hover:bg-black/90"
             }`}
             {...press}
           >

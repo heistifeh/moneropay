@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { motion as m, AnimatePresence, LayoutGroup } from "framer-motion";
 import {
   VIEWPORT,
@@ -13,12 +13,12 @@ import {
 import { useFlow } from "@/store/store";
 import { useCountdown } from "@/hooks/useCountdown";
 
-/** --- Lightweight chain-aware validators --- */
+/** --- Validators --- */
 const isEvmAddr = (v: string) => /^0x[a-fA-F0-9]{40}$/.test(v.trim());
 const isSolAddr = (v: string) => /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(v.trim());
 const isBtcAddr = (v: string) => {
   const s = v.trim();
-  const bech32 = /^(bc1)[0-9ac-hj-np-z]{11,71}$/i.test(s); // simplified
+  const bech32 = /^(bc1)[0-9ac-hj-np-z]{11,71}$/i.test(s);
   const legacy = /^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$/.test(s);
   return bech32 || legacy;
 };
@@ -46,7 +46,7 @@ function validateBySymbol(symbol: string, addr: string): string | null {
   return v.length < 10 ? "Address looks too short" : null;
 }
 
-/** --- Small UI helpers --- */
+/** --- UI helper --- */
 function TokenBadge({
   symbol,
   name,
@@ -73,33 +73,42 @@ function TokenBadge({
 }
 
 export default function AddressStep() {
-  const { quote, setUserReceiveAddress, next, prev } = useFlow();
+  const { next, prev, quote, attachPayout } = useFlow();
 
   const [addr, setAddr] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   // countdown from quote expiry
-  const { label: countdown, expired } = useCountdown(quote?.expiresAt);
+  const { label: countdown, expired } = useCountdown(
+    quote?.expires_at ? Number(quote.expires_at) : undefined
+  );
 
-  // prettified pieces (with safe fallbacks)
-  const fromSymbol = quote?.fromSymbol ?? "FROM";
-  const toSymbol = quote?.toSymbol ?? "TO";
-  const fromName = quote?.fromName ?? "";
-  const toName = quote?.toName ?? "";
+  console.log("AddressStep quote:", quote);
 
-  // live validation as user types (use locked toSymbol from quote)
+  // prettified pieces
+  const fromSymbol = quote?.base_symbol ?? "FROM";
+  const toSymbol = quote?.quote_symbol ?? "TO";
+  const rate = quote?.rate ?? 0;
+
+  // live validation
   useEffect(() => {
     if (!addr) return setError(null);
     if (!quote) return setError("No active quote");
-    setError(validateBySymbol(quote.toSymbol, addr));
-  }, [addr, quote]);
+    setError(validateBySymbol(toSymbol, addr));
+  }, [addr, quote, toSymbol]);
 
-  const onContinue = () => {
+  const onContinue = async () => {
     if (!quote) return;
-    const msg = validateBySymbol(quote.toSymbol, addr);
+    const msg = validateBySymbol(toSymbol, addr);
     if (msg) return setError(msg);
-    setUserReceiveAddress(addr.trim());
-    next();
+
+    try {
+      await attachPayout(quote.public_id, addr.trim()); // ✅ updates store
+      next(); // move to Summary step
+    } catch (err) {
+      console.error("Failed to attach payout:", err);
+      setError("Failed to save payout address. Please try again.");
+    }
   };
 
   if (!quote) {
@@ -122,23 +131,6 @@ export default function AddressStep() {
       </m.div>
     );
   }
-
-  // gentle progress meter (0 when expired)
-  const [progress, setProgress] = useState(100);
-  useEffect(() => {
-    if (!quote?.expiresAt) return;
-    const now = Date.now();
-    const total = quote.expiresAt - (quote.createdAt ?? now);
-    const tick = () => {
-      const n = Date.now();
-      const rem = Math.max(0, quote.expiresAt - n);
-      const pct = Math.max(0, Math.min(100, (rem / total) * 100));
-      setProgress(pct);
-    };
-    const id = setInterval(tick, 250);
-    tick();
-    return () => clearInterval(id);
-  }, [quote?.createdAt, quote?.expiresAt]);
 
   const canContinue = !!addr && !expired && !error;
 
@@ -167,28 +159,21 @@ export default function AddressStep() {
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <span className="text-sm text-zinc-600">You send:</span>
                 <span className="text-sm font-semibold text-zinc-900">
-                  {quote.amountIn} {fromSymbol}
+                  {quote.amount_in} {fromSymbol}
                 </span>
-                <TokenBadge symbol={fromSymbol} name={fromName} />
+                <TokenBadge symbol={fromSymbol} />
               </div>
 
               <div className="mt-1 flex flex-wrap items-center gap-2">
                 <span className="text-sm text-zinc-600">You get:</span>
                 <span className="text-sm font-semibold text-zinc-900">
-                  {quote.amountOut.toFixed(6)} {toSymbol}
+                  {quote.amount_out.toFixed(6)} {toSymbol}
                 </span>
-                <TokenBadge symbol={toSymbol} name={toName} tone="pumpkin" />
+                <TokenBadge symbol={toSymbol} tone="pumpkin" />
               </div>
 
               <p className="mt-2 text-xs text-zinc-500">
-                Rate locked at:&nbsp;
-                <span className="font-medium text-zinc-700">
-                  1 {fromSymbol} ({fromName || "—"})
-                </span>
-                &nbsp;=&nbsp;
-                <span className="font-medium text-zinc-700">
-                  {quote.rate.toFixed(6)} {toSymbol} ({toName || "—"})
-                </span>
+                Rate locked at: 1 {fromSymbol} = {rate.toFixed(6)} {toSymbol}
               </p>
             </div>
 
@@ -204,22 +189,12 @@ export default function AddressStep() {
               {expired ? "Expired" : `Expires in ${countdown}`}
             </m.span>
           </div>
-
-          {/* progress bar */}
-          <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-zinc-100">
-            <m.div
-              initial={{ width: 0 }}
-              animate={{ width: `${progress}%` }}
-              transition={{ type: "tween", duration: 0.25 }}
-              className={`h-full ${expired ? "bg-rose-400" : "bg-pumpkin-900"}`}
-            />
-          </div>
         </m.section>
 
         {/* Address input */}
         <m.section variants={listItem} className="space-y-2">
           <label className="text-sm text-zinc-600">
-            Your {toSymbol} {toName ? `(${toName})` : ""} receive address
+            Your {toSymbol} receive address
           </label>
 
           <div className="relative">
@@ -232,22 +207,12 @@ export default function AddressStep() {
                   ? "border-rose-300 focus:ring-rose-200"
                   : "border-zinc-200 focus:ring-pumpkin-200"
               }`}
-              placeholder={`Paste your ${toSymbol}${
-                toName ? ` (${toName})` : ""
-              } address`}
+              placeholder={`Paste your ${toSymbol} address`}
               value={addr}
               onChange={(e) => setAddr(e.target.value)}
               whileFocus={{ scale: 1.005 }}
               transition={layoutSpring}
             />
-            <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-zinc-400">
-              ⌘V
-            </div>
-          </div>
-
-          <div className="text-xs text-zinc-500">
-            Make sure this is a valid {toSymbol}
-            {toName ? ` (${toName})` : ""} address on the correct network.
           </div>
 
           <AnimatePresence>
