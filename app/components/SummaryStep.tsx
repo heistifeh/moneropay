@@ -5,22 +5,36 @@ import { motion as m, LayoutGroup } from "framer-motion";
 import { VIEWPORT, listItem, inViewStagger } from "@/utils/animation";
 import { useFlow } from "@/store/store";
 import { useQuotePoller } from "@/hooks/useQuotePoller";
+import { useRouter } from "next/navigation";
 
 export default function SummaryStep() {
-  const { quote, txHash, sellerDepositAddress, userReceiveAddress, reset } = useFlow();
+  const { quote, txHash, userReceiveAddress, reset } = useFlow();
 
   // keep backend status fresh
   useQuotePoller(quote?.public_id);
 
   // auto-reset once terminal state is reached
-  useEffect(() => {
+  // useEffect(() => {
+  //   if (!quote) return;
+  //   if (["success", "failed", "expired"].includes(quote.status)) {
+  //     const t = setTimeout(() => reset(), 3000);
+  //     return () => clearTimeout(t);
+  //   }
+  // }, [quote?.status, reset]);
+
+const router = useRouter();
+
+useEffect(() => {
     if (!quote) return;
-    if (["success", "failed", "expired"].includes(quote.status)) {
-      // give user a short pause before resetting (e.g. 3s)
-      const t = setTimeout(() => reset(), 3000);
-      return () => clearTimeout(t);
+
+    if (quote.status === "success") {
+      router.replace("/success");
+    } else if (quote.status === "failed") {
+      router.replace("/failed");
+    } else if (quote.status === "expired") {
+      router.replace("/expired");
     }
-  }, [quote?.status, reset]);
+  }, [quote?.status, router]);
 
   if (!quote) {
     return (
@@ -63,7 +77,7 @@ export default function SummaryStep() {
               className={`font-semibold ${
                 quote.status === "success"
                   ? "text-green-600"
-                  : quote.status === "failed" || quote.status === "expired"
+                  : ["failed", "expired"].includes(quote.status)
                   ? "text-rose-600"
                   : "text-pumpkin-600"
               }`}
@@ -77,7 +91,7 @@ export default function SummaryStep() {
         <m.section variants={listItem} className="space-y-2">
           <p className="text-sm text-zinc-600">You send</p>
           <p className="font-semibold">
-            {quote.amount_in} {quote.base_symbol}
+            {formatNum(quote.amount_in)} {quote.base_symbol}
           </p>
           <p className="text-sm text-zinc-600">You receive</p>
           <p className="font-semibold">
@@ -92,11 +106,15 @@ export default function SummaryStep() {
         <m.section variants={listItem} className="space-y-2">
           <div>
             <p className="text-sm text-zinc-600">Deposit to seller</p>
-            <p className="font-mono text-sm">{sellerDepositAddress ?? quote.deposit_address}</p>
+            <p className="font-mono text-sm break-all">
+              {quote.deposit_address ?? "Fetching deposit address…"}
+            </p>
           </div>
           <div>
             <p className="text-sm text-zinc-600">Your receive address</p>
-            <p className="font-mono text-sm">{userReceiveAddress ?? quote.payout_address}</p>
+            <p className="font-mono text-sm break-all">
+              {userReceiveAddress ?? quote.payout_address ?? "Not provided"}
+            </p>
           </div>
         </m.section>
 

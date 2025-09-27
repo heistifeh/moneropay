@@ -77,13 +77,12 @@ export default function AddressStep() {
 
   const [addr, setAddr] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   // countdown from quote expiry
   const { label: countdown, expired } = useCountdown(
     quote?.expires_at ? Number(quote.expires_at) : undefined
   );
-
-  console.log("AddressStep quote:", quote);
 
   // prettified pieces
   const fromSymbol = quote?.base_symbol ?? "FROM";
@@ -102,12 +101,15 @@ export default function AddressStep() {
     const msg = validateBySymbol(toSymbol, addr);
     if (msg) return setError(msg);
 
+    setLoading(true);
     try {
       await attachPayout(quote.public_id, addr.trim()); // ✅ updates store
       next(); // move to Summary step
     } catch (err) {
       console.error("Failed to attach payout:", err);
-      setError("Failed to save payout address. Please try again.");
+      setError("Backend error: could not save payout address.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -132,7 +134,7 @@ export default function AddressStep() {
     );
   }
 
-  const canContinue = !!addr && !expired && !error;
+  const canContinue = !!addr && !expired && !error && !loading;
 
   return (
     <LayoutGroup>
@@ -212,6 +214,7 @@ export default function AddressStep() {
               onChange={(e) => setAddr(e.target.value)}
               whileFocus={{ scale: 1.005 }}
               transition={layoutSpring}
+              disabled={expired}
             />
           </div>
 
@@ -248,7 +251,7 @@ export default function AddressStep() {
             }`}
             {...press}
           >
-            Continue
+            {loading ? "Saving..." : "Continue"}
           </m.button>
         </m.div>
       </m.div>
