@@ -4,8 +4,16 @@ import { useEffect, useState } from "react";
 import { Button } from "@/app/components/ui/button";
 import { StatusBadge } from "@/app/components/ui/statusBadge";
 import { Separator } from "@/app/components/ui/separator";
-import { usePathname } from "next/navigation";
-import { Card } from "@/app/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardContent,
+  CardFooter,
+} from "@/app/components/ui/card";
+import { logout } from "@/lib/utils/auth-helpers";
+
+// lucide-react icons
+import { LogOut, CheckCircle2, XCircle, Hourglass } from "lucide-react";
 
 type Quote = {
   id: number;
@@ -58,57 +66,84 @@ export default function DashboardPage() {
   }, []);
 
   return (
-    <div className="bg-black p-6 space-y-6">
-      <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+    <div className="bg-black min-h-screen p-8 text-white">
+      {/* Header */}
+      <header className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+        <Button variant="destructive" onClick={logout} className="flex items-center gap-2">
+          <LogOut className="h-4 w-4" />
+          Logout
+        </Button>
+      </header>
+
       <Separator />
 
-      {loading && <p className="text-sm text-zinc-500">Loading quotes…</p>}
+      {/* Loading State */}
+      {loading && (
+        <p className="mt-6 text-sm text-zinc-400 animate-pulse">
+          Fetching quotes…
+        </p>
+      )}
 
-      <div className="grid gap-4">
+      {/* Quotes Grid */}
+      <div className="grid gap-6 mt-6">
         {quotes.map((q) => (
-          <Card key={q.id} className="p-4 space-y-2">
-            <div className="flex justify-between items-center">
+          <Card
+            key={q.id}
+            className="bg-zinc-900 border border-zinc-800 shadow-md rounded-2xl"
+          >
+            <CardHeader className="flex flex-row justify-between items-start">
               <div>
-                <p className="font-semibold">
-                  {q.amount_in} {q.base_symbol} → {q.amount_out}{" "}
-                  {q.quote_symbol}
-                </p>
+                <h2 className="font-semibold text-lg">
+                  {q.amount_in} {q.base_symbol} → {q.amount_out} {q.quote_symbol}
+                </h2>
                 <p className="text-xs text-zinc-500">
                   Created {new Date(q.created_at).toLocaleString()}
                 </p>
               </div>
               <StatusBadge status={q.status as any} />
-            </div>
+            </CardHeader>
 
-            <div className="text-xs text-zinc-600">
-              Deposit: {q.deposit_address}
-              <br />
-              Payout: {q.payout_address ?? "—"}
-            </div>
+            <CardContent className="text-sm text-zinc-200 space-y-1">
+              <p>
+                <span className="text-zinc-400">Deposit:</span>{" "}
+                {q.deposit_address}
+              </p>
+              <p>
+                <span className="text-zinc-400">Payout:</span>{" "}
+                {q.payout_address ?? "—"}
+              </p>
+            </CardContent>
 
-            <div className="flex gap-2 pt-2">
+            <CardFooter className="flex gap-3">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => updateStatus(q.id, "success")}
+                className="flex items-center gap-2"
               >
-                Mark Success
+                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                Success
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => updateStatus(q.id, "failed")}
+                className="flex items-center gap-2"
               >
-                Mark Failed
+                <XCircle className="h-4 w-4 text-red-500" />
+                Failed
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => updateStatus(q.id, "expired")}
+                className="flex items-center gap-2"
               >
-                Mark Expired
+                <Hourglass className="h-4 w-4 text-yellow-500" />
+                Expired
               </Button>
-            </div>
+            </CardFooter>
           </Card>
         ))}
       </div>

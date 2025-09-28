@@ -33,7 +33,7 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const isNewPasswordPage = (request.nextUrl.pathname = '/auth/new-password');
+  const isNewPasswordPage = (request.nextUrl.pathname === '/auth/new-password');
 
   if (
     user &&

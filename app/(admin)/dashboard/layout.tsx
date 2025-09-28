@@ -8,7 +8,7 @@ export default function AdminLayout({
   return (
     <html lang="en">
       <body className="bg-black">
-        <main className="flex-1 p-6">{children}</main>
+        <main className="">{children}</main>
       </body>
     </html>
   );
