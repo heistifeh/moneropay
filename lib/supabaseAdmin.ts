@@ -10,5 +10,5 @@ export const supabaseAdmin = () =>
 export const createAdminClient = () =>
   createNewClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_SRK!
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
   );

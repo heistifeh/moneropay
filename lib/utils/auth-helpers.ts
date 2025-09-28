@@ -1,48 +1,50 @@
-// import { createClient } from '@/utils/supabase/client';
 
-// export async function verifyOtp(email: string, otp: string) {
-//   const supabase = createClient();
+import { createAdminClient } from "../supabaseAdmin";
 
-//   const isPasswordReset = sessionStorage.getItem('isPasswordReset') == 'true';
 
-//   const { data, error } = await supabase.auth.verifyOtp({
-//     token: otp,
-//     email,
-//     type: isPasswordReset ? 'recovery' : 'email',
-//   });
+export async function verifyOtp(email: string, otp: string) {
+  const supabase = createAdminClient();
 
-//   if (error) throw error;
+  const isPasswordReset = sessionStorage.getItem('isPasswordReset') == 'true';
 
-//   return data;
-// }
+  const { data, error } = await supabase.auth.verifyOtp({
+    token: otp,
+    email,
+    type: isPasswordReset ? 'recovery' : 'email',
+  });
 
-// export async function login(email: string, password: string) {
-//   const supabase = createClient();
+  if (error) throw error;
 
-//   const { data, error } = await supabase.auth.signInWithPassword({
-//     email,
-//     password,
-//   });
+  return data;
+}
 
-//   if (error) throw error;
+export async function login(email: string, password: string) {
+  const supabase = createAdminClient();
 
-//   return data;
-// }
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
 
-// export async function logout() {
-//   const supabase = createClient();
+  if (error) throw error;
 
-//   const { error } = await supabase.auth.signOut();
+  return data;
+}
 
-//   if (error) throw error;
-// }
+export async function logout() {
+  const supabase = createAdminClient();
 
-// export async function updatePassword(password: string) {
-//   const supabase = createClient();
+  const { error } = await supabase.auth.signOut();
 
-//   const { error } = await supabase.auth.updateUser({
-//     password,
-//   });
+  if (error) throw error;
+}
 
-//   if (error) throw error;
-// }
+export async function updatePassword(password: string) {
+  const supabase = createAdminClient();
+
+  const { error } = await supabase.auth.updateUser({
+    password,
+  });
+
+  if (error) throw error;
+}
