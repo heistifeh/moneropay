@@ -1,5 +1,5 @@
-import { supabaseAdmin } from '@/lib/supabaseAdmin';
-import { NextRequest, NextResponse } from 'next/server';
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { NextRequest, NextResponse } from "next/server";
 
 // Map coin symbols to deposit addresses from ENV
 const DEPOSIT_ADDRS: Record<string, string | undefined> = {
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
 
     if (!base_symbol || !quote_symbol || !chain || !amount_in) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: "Missing required fields" },
         { status: 400 }
       );
     }
@@ -39,14 +39,14 @@ export async function POST(req: NextRequest) {
 
     // 1. Try get latest price cache
     const { data: cache, error: cacheErr } = await sb
-      .from('price_cache')
-      .select('*')
-      .order('fetched_at', { ascending: false })
+      .from("price_cache")
+      .select("*")
+      .order("fetched_at", { ascending: false })
       .limit(1)
       .single();
 
     if (cacheErr) {
-      console.error('Failed to read price_cache:', cacheErr);
+      console.error("Failed to read price_cache:", cacheErr);
     }
 
     let payload: Record<string, number> | null = null;
@@ -60,13 +60,13 @@ export async function POST(req: NextRequest) {
 
     // 2. If cache is stale, fetch from CoinGecko
     if (!payload) {
-      const ids = ['bitcoin', 'ethereum', 'solana', 'tether', 'usd-coin']; // expand as needed
+      const ids = ["bitcoin", "ethereum", "solana", "tether", "usd-coin"]; // expand as needed
       const url = `https://api.coingecko.com/api/v3/simple/price?ids=${ids.join(
-        ','
+        ","
       )}&vs_currencies=usd`;
 
       const resp = await fetch(url);
-      if (!resp.ok) throw new Error('Failed to fetch prices from CoinGecko');
+      if (!resp.ok) throw new Error("Failed to fetch prices from CoinGecko");
       const fresh = await resp.json();
 
       payload = Object.fromEntries(
@@ -74,10 +74,10 @@ export async function POST(req: NextRequest) {
       );
 
       // save to cache
-      await sb.from('price_cache').insert([
+      await sb.from("price_cache").insert([
         {
           payload,
-          source: 'coingecko',
+          source: "coingecko",
           fetched_at: new Date().toISOString(),
         },
       ]);
@@ -85,11 +85,11 @@ export async function POST(req: NextRequest) {
 
     // 3. Map symbols to ids
     const SYMBOL_TO_ID: Record<string, string> = {
-      BTC: 'bitcoin',
-      ETH: 'ethereum',
-      SOL: 'solana',
-      USDT: 'tether',
-      USDC: 'usd-coin',
+      BTC: "bitcoin",
+      ETH: "ethereum",
+      SOL: "solana",
+      USDT: "tether",
+      USDC: "usd-coin",
     };
 
     const baseId = SYMBOL_TO_ID[base_symbol];
@@ -99,10 +99,7 @@ export async function POST(req: NextRequest) {
     const quotePrice = payload?.[quoteId];
 
     if (!basePrice || !quotePrice) {
-      return NextResponse.json(
-        { error: 'Unsupported asset' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Unsupported asset" }, { status: 400 });
     }
 
     // 4. Lock the rate
@@ -112,7 +109,7 @@ export async function POST(req: NextRequest) {
 
     // 5. Save quote
     const { data, error } = await sb
-      .from('quotes')
+      .from("quotes")
       .insert([
         {
           base_symbol,
@@ -132,9 +129,9 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(data, { status: 201 });
   } catch (e: any) {
-    console.error('Quote creation error:', e);
+    console.error("Quote creation error:", e);
     return NextResponse.json(
-      { error: e.message ?? 'Server error' },
+      { error: e.message ?? "Server error" },
       { status: 500 }
     );
   }
