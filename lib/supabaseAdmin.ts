@@ -1,14 +1,17 @@
 import { createClient } from "@supabase/supabase-js";
-import { createClient as createNewClient } from "@supabase/supabase-js";
+import { createBrowserClient } from "@supabase/ssr";
+
+// 🚨 Server-only, full access
 export const supabaseAdmin = () =>
   createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!, // server-only secret
-    { auth: { persistSession: false } }
+    process.env.SUPABASE_SERVICE_ROLE_KEY!, // never expose to client
+    
   );
 
-export const createBrowserClient = () =>
-  createNewClient(
+// 🌐 Browser-safe, respects RLS
+export const supabaseBrowser = () =>
+  createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
