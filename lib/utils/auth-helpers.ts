@@ -1,9 +1,9 @@
-
-import { createAdminClient } from "../supabaseAdmin";
+import { createClient } from "@supabase/supabase-js";
+import { createBrowserClient } from "../supabaseAdmin";
 
 
 export async function verifyOtp(email: string, otp: string) {
-  const supabase = createAdminClient();
+  const supabase = createBrowserClient();
 
   const isPasswordReset = sessionStorage.getItem('isPasswordReset') == 'true';
 
@@ -19,7 +19,7 @@ export async function verifyOtp(email: string, otp: string) {
 }
 
 export async function login(email: string, password: string) {
-  const supabase = createAdminClient();
+  const supabase = createBrowserClient();
 
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
@@ -32,7 +32,7 @@ export async function login(email: string, password: string) {
 }
 
 export async function logout() {
-  const supabase = createAdminClient();
+  const supabase = createBrowserClient();
 
   const { error } = await supabase.auth.signOut();
 
@@ -40,7 +40,7 @@ export async function logout() {
 }
 
 export async function updatePassword(password: string) {
-  const supabase = createAdminClient();
+  const supabase = createBrowserClient();
 
   const { error } = await supabase.auth.updateUser({
     password,

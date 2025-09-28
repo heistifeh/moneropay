@@ -1,94 +1,95 @@
-// import PasswordResetConfirmationEmail from '@/lib/emails/password-reset-confirmation-email';
-// import VerificationEmail from '@/lib/emails/verification-email';
-// import WelcomeEmail from '@/lib/emails/welcome-email';
-// import { createAdminClient } from '@/utils/supabase/client';
-// import { NextRequest, NextResponse } from 'next/server';
-// import { Resend } from 'resend';
 
-// const resend = new Resend(process.env.RESEND_API_KEY);
+import PasswordResetConfirmationEmail from '@/lib/emails/password-reset-confirmation-email';
+import VerificationEmail from '@/lib/emails/verification-email';
+import WelcomeEmail from '@/lib/emails/welcome-email';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { NextRequest, NextResponse } from 'next/server';
+import { Resend } from 'resend';
 
-// export async function POST(request: NextRequest) {
-//   try {
-//     const { type, email, password, isPasswordReset, origin } =
-//       await request.json();
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-//     if (!email) {
-//       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
-//     }
+export async function POST(request: NextRequest) {
+  try {
+    const { type, email, password, isPasswordReset, origin } =
+      await request.json();
 
-//     let data;
+    if (!email) {
+      return NextResponse.json({ error: 'Email is required' }, { status: 400 });
+    }
 
-//     switch (type) {
-//       case 'verification':
-//         const supabase = createAdminClient();
-//         const res = await supabase.auth.admin.generateLink({
-//           type: isPasswordReset ? 'recovery' : 'signup',
-//           email,
-//           password: isPasswordReset ? undefined : password,
-//         });
+    let data;
 
-//         if (res.data.properties?.email_otp) {
-//           data = await resend.emails.send({
-//             from: 'auth@mrshadrack.com',
-//             to: email,
-//             subject: isPasswordReset
-//               ? 'Reset your password'
-//               : 'Verify your email',
-//             react: VerificationEmail({
-//               otp: res.data.properties?.email_otp,
-//               isPasswordReset: !!isPasswordReset,
-//             }),
-//           });
-//         } else {
-//           return NextResponse.json({ data: null, error: res.error });
-//         }
+    switch (type) {
+      case 'verification':
+        const supabase = supabaseAdmin();
+        const res = await supabase.auth.admin.generateLink({
+          type: isPasswordReset ? 'recovery' : 'signup',
+          email,
+          password: isPasswordReset ? undefined : password,
+        });
 
-//         break;
+        if (res.data.properties?.email_otp) {
+          data = await resend.emails.send({
+            from: 'auth@mrshadrack.com',
+            to: email,
+            subject: isPasswordReset
+              ? 'Reset your password'
+              : 'Verify your email',
+            react: VerificationEmail({
+              otp: res.data.properties?.email_otp,
+              isPasswordReset: !!isPasswordReset,
+            }),
+          });
+        } else {
+          return NextResponse.json({ data: null, error: res.error });
+        }
 
-//       case 'welcome':
-//         const dashboardUrl = origin
-//           ? `${origin}/dashboard`
-//           : `${new URL(request.url).origin}/dashboard`;
+        break;
 
-//         data = await resend.emails.send({
-//           from: 'welcome@mrshadrack.com',
-//           to: email,
-//           subject: 'Welcome to our platform!',
-//           react: WelcomeEmail({
-//             userEmail: email,
-//             dashboardUrl,
-//           }),
-//         });
-//         break;
+      case 'welcome':
+        const dashboardUrl = origin
+          ? `${origin}/dashboard`
+          : `${new URL(request.url).origin}/dashboard`;
 
-//       case 'password-reset-confirmation':
-//         const loginUrl = origin
-//           ? `${origin}/auth/login`
-//           : `${new URL(request.url).origin}/auth/login`;
+        data = await resend.emails.send({
+          from: 'welcome@mrshadrack.com',
+          to: email,
+          subject: 'Welcome to our platform!',
+          react: WelcomeEmail({
+            userEmail: email,
+            dashboardUrl,
+          }),
+        });
+        break;
 
-//         data = await resend.emails.send({
-//           from: 'auth@mrshadrack.com',
-//           to: email,
-//           subject: 'Your password has been reset',
-//           react: PasswordResetConfirmationEmail({
-//             userEmail: email,
-//             loginUrl,
-//           }),
-//         });
-//         break;
+      case 'password-reset-confirmation':
+        const loginUrl = origin
+          ? `${origin}/auth/login`
+          : `${new URL(request.url).origin}/auth/login`;
 
-//       default:
-//         return NextResponse.json(
-//           { error: 'Invalid email type' },
-//           { status: 400 }
-//         );
-//     }
+        data = await resend.emails.send({
+          from: 'auth@mrshadrack.com',
+          to: email,
+          subject: 'Your password has been reset',
+          react: PasswordResetConfirmationEmail({
+            userEmail: email,
+            loginUrl,
+          }),
+        });
+        break;
 
-//     return NextResponse.json({ data });
-//   } catch (error) {
-//     return NextResponse.json(
-//       { error: (error as Error).message },
-//       { status: 500 }
-//     );
-//   }
-// }
+      default:
+        return NextResponse.json(
+          { error: 'Invalid email type' },
+          { status: 400 }
+        );
+    }
+
+    return NextResponse.json({ data });
+  } catch (error) {
+    return NextResponse.json(
+      { error: (error as Error).message },
+      { status: 500 }
+    );
+  }
+}
