@@ -3,6 +3,7 @@ import Hero from "./components/Hero";
 import Features from "./components/Features";
 import Elementor from "./components/elementor";
 import Media from "./components/Media";
+import How from "./components/How";
 
 export default function Home() {
   return (
@@ -10,6 +11,7 @@ export default function Home() {
       <Hero />
       <Features />
       <Media />
+      <How />
     </>
   );
 }
