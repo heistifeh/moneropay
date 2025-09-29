@@ -13,6 +13,16 @@ import {
 import { useFlow } from "@/store/store";
 import { useCountdown } from "@/hooks/useCountdown";
 
+// lucide icons
+import {
+  ArrowRightLeft,
+  Wallet,
+  Clock,
+  ChevronLeft,
+  ChevronRight,
+  AlertCircle,
+} from "lucide-react";
+
 /** --- Validators --- */
 const isEvmAddr = (v: string) => /^0x[a-fA-F0-9]{40}$/.test(v.trim());
 const isSolAddr = (v: string) => /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(v.trim());
@@ -46,14 +56,12 @@ function validateBySymbol(symbol: string, addr: string): string | null {
   return v.length < 10 ? "Address looks too short" : null;
 }
 
-/** --- UI helper --- */
+/** --- UI helpers --- */
 function TokenBadge({
   symbol,
-  name,
   tone = "zinc",
 }: {
   symbol?: string;
-  name?: string;
   tone?: "zinc" | "pumpkin";
 }) {
   const toneCls =
@@ -62,12 +70,26 @@ function TokenBadge({
       : "bg-zinc-50 text-zinc-700 ring-zinc-200";
   return (
     <span
-      className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium ring-1 ${toneCls}`}
+      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ring-1 ${toneCls}`}
     >
       <span className="rounded-md bg-white/70 px-1.5 py-0.5 font-semibold">
         {symbol ?? "—"}
       </span>
-      <span className="truncate">{name ?? "Unknown"}</span>
+    </span>
+  );
+}
+
+function CountdownPill({ expired, countdown }: { expired: boolean; countdown: string }) {
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 shrink-0 rounded-full px-3 py-1 text-xs font-medium ${
+        expired
+          ? "bg-rose-50 text-rose-700"
+          : "bg-pumpkin-50 text-pumpkin-700"
+      }`}
+    >
+      <Clock className="h-3.5 w-3.5" />
+      {expired ? "Expired" : `Expires in ${countdown}`}
     </span>
   );
 }
@@ -79,12 +101,10 @@ export default function AddressStep() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // countdown from quote expiry
   const { label: countdown, expired } = useCountdown(
     quote?.expires_at ? Number(quote.expires_at) : undefined
   );
 
-  // prettified pieces
   const fromSymbol = quote?.base_symbol ?? "FROM";
   const toSymbol = quote?.quote_symbol ?? "TO";
   const rate = quote?.rate ?? 0;
@@ -103,8 +123,8 @@ export default function AddressStep() {
 
     setLoading(true);
     try {
-      await attachPayout(quote.public_id, addr.trim()); // ✅ updates store
-      next(); // move to Summary step
+      await attachPayout(quote.public_id, addr.trim());
+      next();
     } catch (err) {
       console.error("Failed to attach payout:", err);
       setError("Backend error: could not save payout address.");
@@ -120,14 +140,14 @@ export default function AddressStep() {
         animate={{ opacity: 1, y: 0 }}
         className="mx-auto w-full max-w-md rounded-3xl bg-white p-6 shadow"
       >
-        <p className="text-zinc-700">
-          No active quote. Please go back and create one.
-        </p>
+        <p className="text-zinc-700">No active quote. Please go back and create one.</p>
         <m.button
+          type="button"
           onClick={prev}
-          className="mt-4 rounded-xl border border-zinc-200 px-4 py-2 hover:bg-zinc-50"
+          className="mt-4 inline-flex items-center gap-2 rounded-xl border border-zinc-200 px-4 py-2 hover:bg-zinc-50"
           whileTap={{ scale: 0.98 }}
         >
+          <ChevronLeft className="h-4 w-4" />
           Back
         </m.button>
       </m.div>
@@ -154,7 +174,8 @@ export default function AddressStep() {
         >
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <h3 className="text-lg font-semibold text-zinc-900">
+              <h3 className="flex items-center gap-2 text-lg font-semibold text-zinc-900">
+                <ArrowRightLeft className="h-5 w-5 text-zinc-500" />
                 Your Quote
               </h3>
 
@@ -179,23 +200,16 @@ export default function AddressStep() {
               </p>
             </div>
 
-            {/* Countdown pill */}
-            <m.span
-              variants={reveal}
-              className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium ${
-                expired
-                  ? "bg-rose-50 text-rose-700"
-                  : "bg-pumpkin-50 text-pumpkin-700"
-              }`}
-            >
-              {expired ? "Expired" : `Expires in ${countdown}`}
-            </m.span>
+            <m.div variants={reveal}>
+              <CountdownPill expired={expired} countdown={countdown} />
+            </m.div>
           </div>
         </m.section>
 
         {/* Address input */}
         <m.section variants={listItem} className="space-y-2">
-          <label className="text-sm text-zinc-600">
+          <label className="flex items-center gap-1.5 text-sm text-zinc-600">
+            <Wallet className="h-4 w-4 text-zinc-500" />
             Your {toSymbol} receive address
           </label>
 
@@ -204,6 +218,7 @@ export default function AddressStep() {
               variants={reveal}
               type="text"
               aria-invalid={!!error}
+              aria-describedby={error ? "address-error" : undefined}
               className={`w-full rounded-2xl border px-4 py-3 text-base outline-none transition focus:ring-2 ${
                 error
                   ? "border-rose-300 focus:ring-rose-200"
@@ -221,11 +236,13 @@ export default function AddressStep() {
           <AnimatePresence>
             {error && (
               <m.p
+                id="address-error"
                 initial={{ opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -4 }}
-                className="text-sm text-rose-600"
+                className="flex items-center gap-1.5 text-sm text-rose-600"
               >
+                <AlertCircle className="h-4 w-4" />
                 {error}
               </m.p>
             )}
@@ -235,23 +252,33 @@ export default function AddressStep() {
         {/* Nav buttons */}
         <m.div variants={listItem} className="flex justify-between gap-3">
           <m.button
+            type="button"
             onClick={prev}
-            className="flex-1 rounded-2xl border border-zinc-200 px-4 py-2 text-zinc-800 transition hover:bg-zinc-50"
+            className="flex-1 inline-flex items-center justify-center gap-2 rounded-2xl border border-zinc-200 px-4 py-2 text-zinc-800 transition hover:bg-zinc-50"
             {...press}
           >
+            <ChevronLeft className="h-4 w-4" />
             Back
           </m.button>
           <m.button
+            type="button"
             onClick={onContinue}
             disabled={!canContinue}
-            className={`flex-1 rounded-2xl px-4 py-2 text-white font-semibold transition ${
+            className={`flex-1 inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2 font-semibold text-white transition ${
               !canContinue
                 ? "cursor-not-allowed bg-zinc-300"
                 : "bg-black hover:bg-black/90"
             }`}
             {...press}
           >
-            {loading ? "Saving..." : "Continue"}
+            {loading ? (
+              "Saving..."
+            ) : (
+              <>
+                Continue
+                <ChevronRight className="h-4 w-4" />
+              </>
+            )}
           </m.button>
         </m.div>
       </m.div>
