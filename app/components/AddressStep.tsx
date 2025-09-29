@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion as m, AnimatePresence, LayoutGroup } from "framer-motion";
 import {
   VIEWPORT,
@@ -79,14 +79,20 @@ function TokenBadge({
   );
 }
 
-function CountdownPill({ expired, countdown }: { expired: boolean; countdown: string }) {
+function CountdownPill({
+  expired,
+  countdown,
+}: {
+  expired: boolean;
+  countdown: string;
+}) {
   return (
     <span
       className={`inline-flex items-center gap-1.5 shrink-0 rounded-full px-3 py-1 text-xs font-medium ${
-        expired
-          ? "bg-rose-50 text-rose-700"
-          : "bg-pumpkin-50 text-pumpkin-700"
+        expired ? "bg-rose-50 text-rose-700" : "bg-pumpkin-50 text-pumpkin-700"
       }`}
+      aria-live="polite"
+      role="status"
     >
       <Clock className="h-3.5 w-3.5" />
       {expired ? "Expired" : `Expires in ${countdown}`}
@@ -108,6 +114,30 @@ export default function AddressStep() {
   const fromSymbol = quote?.base_symbol ?? "FROM";
   const toSymbol = quote?.quote_symbol ?? "TO";
   const rate = quote?.rate ?? 0;
+
+  // dynamic helper hint for address format
+  const addrHint = useMemo(() => {
+    if (toSymbol === "SOL")
+      return "Solana addresses are Base58, 32–44 chars.";
+    if (toSymbol === "BTC")
+      return "Bitcoin addresses can be bc1… (Bech32) or 1/3… (legacy).";
+    const evmSyms = new Set([
+      "ETH",
+      "USDT",
+      "USDC",
+      "ARB",
+      "OP",
+      "MATIC",
+      "BNB",
+      "AVAX",
+      "BASE",
+      "FTM",
+      "CRO",
+    ]);
+    if (evmSyms.has(toSymbol))
+      return "EVM addresses start with 0x followed by 40 hex characters.";
+    return undefined;
+  }, [toSymbol]);
 
   // live validation
   useEffect(() => {
@@ -138,13 +168,15 @@ export default function AddressStep() {
       <m.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mx-auto w-full max-w-md rounded-3xl bg-white p-6 shadow"
+        className="mx-auto w-full max-w-md rounded-3xl bg-white p-5 sm:p-6 shadow"
       >
-        <p className="text-zinc-700">No active quote. Please go back and create one.</p>
+        <p className="text-zinc-700">
+          No active quote. Please go back and create one.
+        </p>
         <m.button
           type="button"
           onClick={prev}
-          className="mt-4 inline-flex items-center gap-2 rounded-xl border border-zinc-200 px-4 py-2 hover:bg-zinc-50"
+          className="mt-4 inline-flex items-center gap-2 rounded-xl border border-zinc-200 px-4 py-2 text-sm sm:text-base hover:bg-zinc-50"
           whileTap={{ scale: 0.98 }}
         >
           <ChevronLeft className="h-4 w-4" />
@@ -163,7 +195,7 @@ export default function AddressStep() {
         initial="hidden"
         whileInView="show"
         viewport={VIEWPORT}
-        className="mx-auto w-full max-w-md space-y-6 rounded-3xl bg-white p-6 shadow"
+        className="mx-auto w-full max-w-md space-y-6 rounded-3xl bg-white p-5 sm:p-6 shadow"
       >
         {/* Quote summary */}
         <m.section
@@ -174,28 +206,30 @@ export default function AddressStep() {
         >
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <h3 className="flex items-center gap-2 text-lg font-semibold text-zinc-900">
+              <h3 className="flex items-center gap-2 text-base sm:text-lg font-semibold text-zinc-900">
                 <ArrowRightLeft className="h-5 w-5 text-zinc-500" />
                 Your Quote
               </h3>
 
-              <div className="mt-2 flex flex-wrap items-center gap-2">
-                <span className="text-sm text-zinc-600">You send:</span>
-                <span className="text-sm font-semibold text-zinc-900">
-                  {quote.amount_in} {fromSymbol}
-                </span>
-                <TokenBadge symbol={fromSymbol} />
+              <div className="mt-2 grid grid-cols-1 gap-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-sm text-zinc-600">You send:</span>
+                  <span className="text-sm font-semibold text-zinc-900 whitespace-nowrap tabular-nums overflow-x-auto">
+                    {quote.amount_in} {fromSymbol}
+                  </span>
+                  <TokenBadge symbol={fromSymbol} />
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-sm text-zinc-600">You get:</span>
+                  <span className="text-sm font-semibold text-zinc-900 whitespace-nowrap tabular-nums overflow-x-auto">
+                    {quote.amount_out.toFixed(6)} {toSymbol}
+                  </span>
+                  <TokenBadge symbol={toSymbol} tone="pumpkin" />
+                </div>
               </div>
 
-              <div className="mt-1 flex flex-wrap items-center gap-2">
-                <span className="text-sm text-zinc-600">You get:</span>
-                <span className="text-sm font-semibold text-zinc-900">
-                  {quote.amount_out.toFixed(6)} {toSymbol}
-                </span>
-                <TokenBadge symbol={toSymbol} tone="pumpkin" />
-              </div>
-
-              <p className="mt-2 text-xs text-zinc-500">
+              <p className="mt-2 text-xs text-zinc-500 whitespace-nowrap overflow-x-auto">
                 Rate locked at: 1 {fromSymbol} = {rate.toFixed(6)} {toSymbol}
               </p>
             </div>
@@ -218,20 +252,29 @@ export default function AddressStep() {
               variants={reveal}
               type="text"
               aria-invalid={!!error}
-              aria-describedby={error ? "address-error" : undefined}
-              className={`w-full rounded-2xl border px-4 py-3 text-base outline-none transition focus:ring-2 ${
+              aria-describedby={error ? "address-error" : "address-hint"}
+              className={`w-full rounded-2xl border px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base outline-none transition focus:ring-2 ${
                 error
                   ? "border-rose-300 focus:ring-rose-200"
                   : "border-zinc-200 focus:ring-pumpkin-200"
-              }`}
+              } font-mono tracking-tight`}
               placeholder={`Paste your ${toSymbol} address`}
               value={addr}
               onChange={(e) => setAddr(e.target.value)}
               whileFocus={{ scale: 1.005 }}
               transition={layoutSpring}
               disabled={expired}
+              autoCapitalize="off"
+              autoCorrect="off"
+              spellCheck={false}
             />
           </div>
+
+          {!error && addrHint && (
+            <p id="address-hint" className="text-xs text-zinc-500">
+              {addrHint}
+            </p>
+          )}
 
           <AnimatePresence>
             {error && (
@@ -241,6 +284,8 @@ export default function AddressStep() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -4 }}
                 className="flex items-center gap-1.5 text-sm text-rose-600"
+                role="alert"
+                aria-live="assertive"
               >
                 <AlertCircle className="h-4 w-4" />
                 {error}
@@ -250,11 +295,11 @@ export default function AddressStep() {
         </m.section>
 
         {/* Nav buttons */}
-        <m.div variants={listItem} className="flex justify-between gap-3">
+        <m.div variants={listItem} className="grid grid-cols-2 gap-3">
           <m.button
             type="button"
             onClick={prev}
-            className="flex-1 inline-flex items-center justify-center gap-2 rounded-2xl border border-zinc-200 px-4 py-2 text-zinc-800 transition hover:bg-zinc-50"
+            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-zinc-200 px-4 py-2 text-sm sm:text-base text-zinc-800 transition hover:bg-zinc-50"
             {...press}
           >
             <ChevronLeft className="h-4 w-4" />
@@ -264,7 +309,7 @@ export default function AddressStep() {
             type="button"
             onClick={onContinue}
             disabled={!canContinue}
-            className={`flex-1 inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2 font-semibold text-white transition ${
+            className={`inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2 text-sm sm:text-base font-semibold text-white transition ${
               !canContinue
                 ? "cursor-not-allowed bg-zinc-300"
                 : "bg-black hover:bg-black/90"
