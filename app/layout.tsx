@@ -23,10 +23,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${poppins.variable} antialiased bg-[url('/main-bg.webp')] bg-no-repeat bg-[length:220%]  bg-pumpkin-700/95 bg-center`}
+        className={`${poppins.variable} antialiased bg-[url('/main-bg.webp')] bg-no-repeat bg-[length:220%]   bg-pumpkin-700/95 bg-center`}
       >
         <Navbar />
-        {children}
+        <main className="bg-gradient-to-b from-pumpkin-900 via-pumpkin-800 to-pumpkin-700">
+          {children}
+        </main>
         <Footer />
       </body>
     </html>
