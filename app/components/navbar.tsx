@@ -28,7 +28,7 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
 
   // If you truly want a different nav for /exchange, keep this.
-  if (pathname === "/exchange") return null;
+  // if (pathname === "/exchange") return null;
   if (pathname.startsWith("/auth/")) return null;
   if (pathname.startsWith("/dashboard")) return null;
   const toggle = () => setIsOpen((v) => !v);

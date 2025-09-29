@@ -2,7 +2,7 @@ import ExchangePanel from "./ExchangePanel";
 
 export default function Hero() {
   return (
-    <section className="py-30 container mx-w-7xl mx-auto px-4">
+    <section className="py-30 container w-full mx-auto px-4 ">
       <div className="max-w-3xl mx-auto text-center">
         <h1 className="font-semi-bold text-5xl sm:text-7xl mb-4">
           Crypto Exchange
