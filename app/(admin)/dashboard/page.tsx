@@ -63,6 +63,8 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetchQuotes();
+    const interval = setInterval(fetchQuotes, 5000); // every 5s
+    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -70,7 +72,11 @@ export default function DashboardPage() {
       {/* Header */}
       <header className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-        <Button variant="destructive" onClick={logout} className="flex items-center gap-2">
+        <Button
+          variant="destructive"
+          onClick={logout}
+          className="flex items-center gap-2"
+        >
           <LogOut className="h-4 w-4" />
           Logout
         </Button>
@@ -95,7 +101,8 @@ export default function DashboardPage() {
             <CardHeader className="flex flex-row justify-between items-start">
               <div>
                 <h2 className="font-semibold text-lg">
-                  {q.amount_in} {q.base_symbol} → {q.amount_out} {q.quote_symbol}
+                  {q.amount_in} {q.base_symbol} → {q.amount_out}{" "}
+                  {q.quote_symbol}
                 </h2>
                 <p className="text-xs text-zinc-500">
                   Created {new Date(q.created_at).toLocaleString()}
