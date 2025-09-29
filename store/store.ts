@@ -1,171 +1,147 @@
-// src/store/store.ts
+"use client";
+
 import { create } from "zustand";
 
-import { ASSET_BY_ID } from "@/lib/constants";
-// ---- Types ----
-export type Step = "quote" | "address" | "summary";
-export type TxStatus =
-  | "idle"
-  | "quoting"
-  | "awaiting_payment"
-  | "confirming"
-  | "success"
-  | "expired"
-  | "failed";
-
+// --- Types ---
 export type Quote = {
-  id: string; // local id (or backend id)
-  fromId: string; // CoinGecko id (e.g., "tether")
-  toId: string; // CoinGecko id (e.g., "solana")
-  fromSymbol: string; // snapshot at quote time (e.g., "USDT")
-  toSymbol: string; // snapshot at quote time (e.g., "SOL")
-  fromName: string; // 👈 add this
-  toName: string; // 👈 add this
-  amountIn: number; // user entered amount (FROM token)
-  rate: number; // TO per 1 FROM at lock time
-  amountOut: number; // amountIn * rate
-  pricesSnapshot: Record<string, number>; // usd snapshot used for this quote
-  createdAt: number; // ms
-  expiresAt: number; // ms (createdAt + 10min by default)
+  public_id: string;
+  base_symbol: string;
+  quote_symbol: string;
+  chain: string;
+  amount_in: number;
+  rate: number;
+  amount_out: number;
+  deposit_address: string;
+  payout_address?: string | null;
+  status: string;              // backend status
+  expires_at: string;
+  created_at: string;
+  updated_at: string;
 };
 
-type FlowState = {
-  // Wizard
+export type Step = "quote" | "address" | "summary";
+
+// --- Store definition ---
+type FlowStore = {
   step: Step;
-
-  // Selections
-  fromSymbol: string; // e.g., "USDT"
-  toSymbol: string; // e.g., "SOL"
-  amountIn: string; // keep as string for friendly typing
-
-  // Addresses
-  userReceiveAddress?: string; // where user will receive TO token
-  sellerDepositAddress?: string; // where user must send FROM token
-
-  // Quote + tx
-  quote?: Quote;
-  status: TxStatus;
-  txHash?: string;
-
-  // Actions
-  setFromSymbol: (s: string) => void;
-  setToSymbol: (s: string) => void;
-  setAmountIn: (v: string) => void;
-
   next: () => void;
   prev: () => void;
+  reset: () => void;
 
-  createQuote: (args: {
-    prices: Record<string, number>;
-    fromId: string;
-    toId: string;
-    amountInNum: number;
-    ttlMs?: number; // default 10 min
-  }) => void;
+  // Quote state
+  quote: Quote | null;
+  createQuote: (payload: {
+    base_symbol: string;
+    quote_symbol: string;
+    chain: string;
+    amount_in: number;
+  }) => Promise<void>;
+  attachPayout: (publicId: string, payoutAddress: string) => Promise<void>;
+  refreshQuote: (publicId: string) => Promise<void>;
 
-  setUserReceiveAddress: (addr: string) => void;
+  // Client-only state
+  txHash: string | null;
+  setTxHash: (hash: string) => void;
+
+  sellerDepositAddress: string | null;
   setSellerDepositAddress: (addr: string) => void;
 
-  markAwaitingPayment: () => void;
-  markConfirming: (txHash?: string) => void;
-  markSuccess: (txHash: string) => void;
-  markFailed: () => void;
+  userReceiveAddress: string | null;
+  setUserReceiveAddress: (addr: string) => void;
 
+  // UI helpers
+  markAwaitingPayment: () => void;
+  markConfirming: (hash: string) => void;
   expireQuote: () => void;
-  reset: () => void;
 };
 
-// ---- Store ----
-export const useFlow = create<FlowState>((set, get) => ({
-  // initial state
+export const useFlow = create<FlowStore>((set) => ({
   step: "quote",
-  fromSymbol: "USDT",
-  toSymbol: "SOL",
-  amountIn: "",
-  status: "idle",
 
-  // selections
-  setFromSymbol: (s) => set({ fromSymbol: s }),
-  setToSymbol: (s) => set({ toSymbol: s }),
-  setAmountIn: (v) => set({ amountIn: v }),
-
-  // wizard nav
-  next: () => {
-    const order: Step[] = ["quote", "address", "summary"];
-    const i = order.indexOf(get().step);
-    if (i < order.length - 1) set({ step: order[i + 1] });
-  },
-  prev: () => {
-    const order: Step[] = ["quote", "address", "summary"];
-    const i = order.indexOf(get().step);
-    if (i > 0) set({ step: order[i - 1] });
-  },
-
-  // --- implementation ---
-  createQuote: ({
-    prices,
-    fromId,
-    toId,
-    amountInNum,
-    ttlMs = 10 * 60 * 1000,
-  }) => {
-    const fromUsd = prices[fromId];
-    const toUsd = prices[toId];
-    if (!fromUsd || !toUsd)
-      throw new Error("Missing prices for selected assets");
-
-    // derive names/symbols from your registry
-    const fromMeta = ASSET_BY_ID[fromId];
-    const toMeta = ASSET_BY_ID[toId];
-    if (!fromMeta || !toMeta) throw new Error("Unknown asset id(s) for quote");
-
-    const rate = fromUsd / toUsd; // TO units per 1 FROM
-    const amountOut = amountInNum * rate;
-    const now = Date.now();
-
-    const q: Quote = {
-      id: `q_${now}`,
-      fromId,
-      toId,
-      fromSymbol: fromMeta.symbol,
-      toSymbol: toMeta.symbol,
-      fromName: fromMeta.name,
-      toName: toMeta.name,
-      amountIn: amountInNum,
-      rate,
-      amountOut,
-      pricesSnapshot: prices,
-      createdAt: now,
-      expiresAt: now + ttlMs,
-    };
-
-    set({ quote: q, status: "quoting" });
-  },
-
-  // addresses
-  setUserReceiveAddress: (addr) => set({ userReceiveAddress: addr }),
-  setSellerDepositAddress: (addr) => set({ sellerDepositAddress: addr }),
-
-  // tx status flow
-  markAwaitingPayment: () => set({ status: "awaiting_payment" }),
-  markConfirming: (txHash) => set({ status: "confirming", txHash }),
-  markSuccess: (txHash) => set({ status: "success", txHash }),
-  markFailed: () => set({ status: "failed" }),
-
-  // expiry
-  expireQuote: () => set({ status: "expired" }),
-
-  // reset everything
+  next: () =>
+    set((s) => ({
+      step:
+        s.step === "quote"
+          ? "address"
+          : s.step === "address"
+          ? "summary"
+          : "quote",
+    })),
+  prev: () =>
+    set((s) => ({
+      step:
+        s.step === "summary"
+          ? "address"
+          : s.step === "address"
+          ? "quote"
+          : "quote",
+    })),
   reset: () =>
     set({
       step: "quote",
-      fromSymbol: "USDT",
-      toSymbol: "SOL",
-      amountIn: "",
-      userReceiveAddress: undefined,
-      sellerDepositAddress: undefined,
-      quote: undefined,
-      status: "idle",
-      txHash: undefined,
+      quote: null,
+      txHash: null,
+      sellerDepositAddress: null,
+      userReceiveAddress: null,
     }),
+
+  quote: null,
+
+  // --- API actions ---
+  createQuote: async (payload) => {
+    const res = await fetch("/api/quotes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error("Failed to create quote");
+    const data: Quote = await res.json();
+    set({ quote: data });
+  },
+
+  attachPayout: async (publicId, payoutAddress) => {
+    const res = await fetch(`/api/quotes/${publicId}/payout`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ payout_address: payoutAddress }),
+    });
+    if (!res.ok) throw new Error("Failed to attach payout address");
+    const data: Quote = await res.json();
+    set({ quote: data });
+  },
+
+  refreshQuote: async (publicId) => {
+    const res = await fetch(`/api/quotes/${publicId}`);
+    if (!res.ok) throw new Error("Failed to fetch quote");
+    const data: Quote = await res.json();
+    set({ quote: data });
+  },
+
+  // --- client-only setters ---
+  txHash: null,
+  setTxHash: (hash) => set({ txHash: hash }),
+
+  sellerDepositAddress: null,
+  setSellerDepositAddress: (addr) => set({ sellerDepositAddress: addr }),
+
+  userReceiveAddress: null,
+  setUserReceiveAddress: (addr) => set({ userReceiveAddress: addr }),
+
+  // --- UI helpers ---
+  markAwaitingPayment: () =>
+    set((s) =>
+      s.quote ? { quote: { ...s.quote, status: "awaiting_payment" } } : s
+    ),
+
+  markConfirming: (hash) =>
+    set((s) =>
+      s.quote
+        ? { quote: { ...s.quote, status: "confirming" }, txHash: hash }
+        : s
+    ),
+
+  expireQuote: () =>
+    set((s) =>
+      s.quote ? { quote: { ...s.quote, status: "expired" } } : s
+    ),
 }));

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { motion as m, AnimatePresence, LayoutGroup } from "framer-motion";
 import {
   VIEWPORT,
@@ -12,41 +12,31 @@ import {
 } from "@/utils/animation";
 
 import { usePrices } from "@/hooks/usePrices";
-import { useFlow } from "@/store/store";
 import { ASSET_BY_SYMBOL } from "@/lib/constants";
-import type { PriceMap } from "@/lib/priceTypes";
 import { AssetSelect } from "./ui/assetSelect";
+import { useFlow } from "@/store/store";
 
 export function QuoteStep() {
-  // live prices + status
-  const { prices, lastUpdated, error, reload } = usePrices({
+  // live prices (only for reference display)
+  const { prices, lastUpdated, error: priceError, reload } = usePrices({
     refreshMs: 25_000,
   });
 
-  // flow actions
-  const { createQuote, next } = useFlow();
+  // zustand actions
+  const { next, createQuote } = useFlow();
 
   // local UI state
   const [fromSymbol, setFromSymbol] = useState("USDT");
   const [toSymbol, setToSymbol] = useState("SOL");
   const [amountIn, setAmountIn] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // derived ids + prices
+  // derived ids + prices (for UI only)
   const fromId = ASSET_BY_SYMBOL[fromSymbol].id;
   const toId = ASSET_BY_SYMBOL[toSymbol].id;
   const priceA = prices?.[fromId];
   const priceB = prices?.[toId];
-
-  const rate = useMemo(() => {
-    if (!priceA || !priceB) return NaN;
-    return priceA / priceB; // TO per 1 FROM
-  }, [priceA, priceB]);
-
-  const amountOut = useMemo(() => {
-    const n = parseFloat(amountIn);
-    if (!Number.isFinite(n) || !Number.isFinite(rate)) return "";
-    return String(n * rate);
-  }, [amountIn, rate]);
 
   // validation
   const sameAsset = fromSymbol === toSymbol;
@@ -54,33 +44,37 @@ export function QuoteStep() {
     !amountIn ||
     Number.isNaN(parseFloat(amountIn)) ||
     parseFloat(amountIn) <= 0;
-  const missingPrices = !Number.isFinite(rate);
-  const canExchange = !invalidAmount && !sameAsset && !missingPrices;
+  const canExchange = !invalidAmount && !sameAsset;
 
-  // actions
+  // swap helper
   const onSwap = () => {
     setFromSymbol(toSymbol);
     setToSymbol(fromSymbol);
-    if (Number.isFinite(rate) && amountIn) {
-      const inv = 1 / (rate as number);
-      const newAmount = parseFloat(amountIn) * inv;
-      if (Number.isFinite(newAmount)) setAmountIn(String(newAmount));
+  };
+
+  // call backend
+  const onExchange = async () => {
+    if (!canExchange) return;
+    setError(null);
+    setLoading(true);
+
+    try {
+      await createQuote({
+        base_symbol: fromSymbol,
+        quote_symbol: toSymbol,
+        chain: "EVM", // TODO: detect by asset
+        amount_in: parseFloat(amountIn),
+      });
+      next(); // advance to Address step
+    } catch (err) {
+      console.error("Failed to create quote", err);
+      setError("Could not create quote. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const onExchange = () => {
-    if (!canExchange) return;
-    const amountInNum = parseFloat(amountIn);
-    createQuote({
-      prices: prices as PriceMap,
-      fromId,
-      toId,
-      amountInNum,
-    });
-    next(); // advance to Address step
-  };
-
-  // hydration-safe timestamp (client-only)
+  // hydration-safe timestamp
   const [updatedAtLabel, setUpdatedAtLabel] = useState<string>("");
   useEffect(() => {
     if (!lastUpdated) return;
@@ -96,6 +90,7 @@ export function QuoteStep() {
         viewport={VIEWPORT}
         className="space-y-5"
       >
+        {/* HEADER */}
         <m.header
           variants={listItem}
           className="flex items-center justify-between"
@@ -104,16 +99,16 @@ export function QuoteStep() {
           <m.span
             variants={reveal}
             className={`px-3 py-1 rounded-full text-sm ${
-              missingPrices
-                ? "bg-zinc-100 text-zinc-700"
+              priceError
+                ? "bg-rose-50 text-rose-700"
                 : "bg-pumpkin-50 text-pumpkin-700"
             }`}
           >
-            {missingPrices ? "Pricing…" : "Live pricing"}
+            {priceError ? "Feed error" : "Live pricing"}
           </m.span>
         </m.header>
 
-        {/* You send */}
+        {/* YOU SEND */}
         <m.section
           variants={listItem}
           layout
@@ -138,7 +133,7 @@ export function QuoteStep() {
           </div>
         </m.section>
 
-        {/* Swap */}
+        {/* SWAP */}
         <m.div variants={listItem} className="flex justify-center">
           <m.button
             onClick={onSwap}
@@ -151,23 +146,23 @@ export function QuoteStep() {
           </m.button>
         </m.div>
 
-        {/* You get */}
+        {/* YOU GET (reference only, backend gives final) */}
         <m.section
           variants={listItem}
           layout
           transition={layoutSpring}
           className="rounded-2xl border border-zinc-200 p-4 bg-white"
         >
-          <label className="text-sm text-zinc-500">You get</label>
+          <label className="text-sm text-zinc-500">You get (est.)</label>
           <div className="mt-2 flex items-center gap-3">
             <m.output
               variants={reveal}
               className="flex-1 rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-lg"
             >
-              {amountOut
-                ? Number(amountOut).toLocaleString(undefined, {
-                    maximumFractionDigits: 8,
-                  })
+              {amountIn && priceA && priceB
+                ? (
+                    (parseFloat(amountIn) * (priceA / priceB)) || 0
+                  ).toLocaleString(undefined, { maximumFractionDigits: 8 })
                 : "—"}
             </m.output>
             <m.div variants={reveal}>
@@ -175,16 +170,14 @@ export function QuoteStep() {
             </m.div>
           </div>
 
-          <m.div variants={reveal} className="mt-2 text-xs text-zinc-500">
-            Rate: 1 {fromSymbol} ≈{" "}
-            {Number.isFinite(rate) ? (rate as number).toFixed(8) : "—"}{" "}
-            {toSymbol}
-            {priceA && priceB && (
+          {priceA && priceB && (
+            <m.div variants={reveal} className="mt-2 text-xs text-zinc-500">
+              Market: 1 {fromSymbol} ≈ {(priceA / priceB).toFixed(8)} {toSymbol}
               <span className="ml-2">
                 (${priceA.toLocaleString()} → ${priceB.toLocaleString()})
               </span>
-            )}
-          </m.div>
+            </m.div>
+          )}
 
           <AnimatePresence>
             {sameAsset && (
@@ -200,19 +193,16 @@ export function QuoteStep() {
           </AnimatePresence>
         </m.section>
 
-        {/* Error + timestamp */}
+        {/* ERROR + TIMESTAMP */}
         <AnimatePresence>
           {error && (
             <m.div
               initial={{ opacity: 0, y: -6 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}
-              className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800"
+              className="rounded-xl border border-rose-300 bg-rose-50 p-3 text-sm text-rose-800"
             >
-              Price feed error: {error}.{" "}
-              <button onClick={reload} className="underline">
-                Retry
-              </button>
+              {error}
             </m.div>
           )}
         </AnimatePresence>
@@ -224,16 +214,16 @@ export function QuoteStep() {
         {/* CTA */}
         <m.div variants={listItem}>
           <m.button
-            disabled={!canExchange}
+            disabled={!canExchange || loading}
             onClick={onExchange}
             className={`w-full rounded-2xl px-4 py-3 text-lg font-semibold text-white transition ${
-              !canExchange
+              !canExchange || loading
                 ? "cursor-not-allowed bg-zinc-300"
-                : "bg-black-600 hover:bg-black-800 cursor-pointer"
+                : "bg-black hover:bg-black/90"
             }`}
             {...press}
           >
-            Exchange
+            {loading ? "Creating quote…" : "Exchange"}
           </m.button>
         </m.div>
 
