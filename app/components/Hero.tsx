@@ -12,7 +12,6 @@ export default function Hero() {
         </span>
       </div>
       <ExchangePanel />
-      
     </section>
   );
 }

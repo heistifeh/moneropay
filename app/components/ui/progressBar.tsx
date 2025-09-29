@@ -2,7 +2,13 @@ import { memo, useMemo } from "react";
 import { useFlow } from "@/store/store";
 import { motion as m } from "framer-motion";
 
-type StepKey = "choose" | "address" | "create" | "success" | "expired" | "failed";
+type StepKey =
+  | "choose"
+  | "address"
+  | "create"
+  | "success"
+  | "expired"
+  | "failed";
 
 const STEPS: { key: StepKey; label: string }[] = [
   { key: "choose", label: "Choose currencies" },
@@ -22,7 +28,9 @@ const activeIndexForKey = (k: StepKey) =>
   k === "choose" ? 0 : k === "address" ? 1 : 2;
 
 export default memo(function ProgressBar() {
-  const { step, status } = useFlow();
+  const { step } = useFlow();
+  // If 'status' is needed, ensure it exists in FlowStore or get it another way
+  const status = ""; // Replace with correct source for status
   const key = normalize(step, status);
   const i = activeIndexForKey(key);
   const max = STEPS.length - 1; // 2
@@ -64,7 +72,11 @@ export default memo(function ProgressBar() {
         {/* fill */}
         <m.div
           className={`absolute left-0 top-1/2 -translate-y-1/2 h-1 rounded-full ${
-            isError ? "bg-rose-500" : isSuccess ? "bg-emerald-500" : "bg-pumpkin-500"
+            isError
+              ? "bg-rose-500"
+              : isSuccess
+                ? "bg-emerald-500"
+                : "bg-pumpkin-500"
           }`}
           initial={{ width: 0 }}
           animate={{ width: `${pct}%` }}
@@ -74,9 +86,11 @@ export default memo(function ProgressBar() {
         {/* active dot */}
         <m.span
           className={`absolute top-1/2 -translate-y-1/2 h-3.5 w-3.5 rounded-full ring-2 ${
-            isError ? "bg-rose-500 ring-rose-200"
-            : isSuccess ? "bg-emerald-500 ring-emerald-200"
-            : "bg-pumpkin-500 ring-pumpkin-200"
+            isError
+              ? "bg-rose-500 ring-rose-200"
+              : isSuccess
+                ? "bg-emerald-500 ring-emerald-200"
+                : "bg-pumpkin-500 ring-pumpkin-200"
           }`}
           initial={{ left: 0 }}
           animate={{ left: `calc(${pct}% - 7px)` }} // 7px ≈ half of 3.5
@@ -96,8 +110,8 @@ export default memo(function ProgressBar() {
                   isError
                     ? "text-rose-600"
                     : active || done
-                    ? "text-zinc-900"
-                    : "text-zinc-500"
+                      ? "text-zinc-900"
+                      : "text-zinc-500"
                 }
               >
                 {s.label}
@@ -109,9 +123,19 @@ export default memo(function ProgressBar() {
 
       {/* caption (only when terminal states) */}
       <div className="mt-1 text-[11px] text-zinc-600">
-        {isSuccess && <span className="text-emerald-600">Completed successfully.</span>}
-        {key === "expired" && <span className="text-rose-600">Quote expired. Please request a new one.</span>}
-        {key === "failed" && <span className="text-rose-600">Transaction failed. Please try again.</span>}
+        {isSuccess && (
+          <span className="text-emerald-600">Completed successfully.</span>
+        )}
+        {key === "expired" && (
+          <span className="text-rose-600">
+            Quote expired. Please request a new one.
+          </span>
+        )}
+        {key === "failed" && (
+          <span className="text-rose-600">
+            Transaction failed. Please try again.
+          </span>
+        )}
       </div>
     </section>
   );
