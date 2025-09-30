@@ -217,7 +217,6 @@ export function QuoteStep() {
         </m.div>
 
         {/* YOU GET (reference only, backend gives final) */}
-        {/* YOU GET (reference only, backend gives final) */}
         <m.section
           variants={listItem}
           layout

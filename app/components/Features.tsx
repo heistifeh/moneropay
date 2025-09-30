@@ -21,7 +21,7 @@ export default function Features() {
       initial="initial"
       animate="animate"
       exit="exit"
-      className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-10 md:pb-60"
+      className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-10 md:pb-30"
     >
       {/* HERO */}
       <div className="mx-auto max-w-5xl bg-pumpkin-800/80 rounded-2xl">
@@ -128,25 +128,25 @@ export default function Features() {
             feature="Privacy"
             header="Sign-Up is not required"
             text="MoneroPays provides cryptocurrency exchange without registration."
-            imageUrl="/privacy.webp"
+            imageUrl="/privacy_pumpkin.webp"
           />
           <Grid
             feature="Wide choice"
             header="1500 cryptocurrencies"
             text="Hundreds of crypto and fiat currencies are available for exchange."
-            imageUrl="/wide-choice.webp"
+            imageUrl="/wide-choice_pumpkin.webp"
           />
           <Grid
             feature="24/7 support"
             header="You won't be left alone"
             text="Our support team is available 24/7 to help you with any issues."
-            imageUrl="/support.webp"
+            imageUrl="/support_pumpkin.webp"
           />
           <Grid
             feature="Safety"
             header="Non-custodial"
             text="Crypto is sent directly to your wallet — we do not store any funds."
-            imageUrl="/safety.webp"
+            imageUrl="/safety_pumpkin.webp"
           />
         </M.div>
       </div>
@@ -196,7 +196,7 @@ export default function Features() {
             className="w-full md:w-auto"
           >
             <Image
-              src="/buy-with-fiat.webp"
+              src="/buy-with-fiat_pumpkin.webp"
               alt="Buy crypto with fiat card"
               width={800} // give Next a big intrinsic source
               height={800}

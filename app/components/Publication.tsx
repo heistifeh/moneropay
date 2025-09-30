@@ -76,7 +76,7 @@ export default function Publication() {
           {/* Matches card styling to “rhyme” with grid */}
           <div className="rounded-2xl border border-black/5 bg-white p-4 shadow-sm">
             <Image
-              src="/media.jpg"
+              src="/media_pumpkin.webp"
               alt="Media coverage collage"
               width={1600}
               height={1200}
