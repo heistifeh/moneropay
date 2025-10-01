@@ -1,6 +1,8 @@
 // app/api/admin/quotes/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic"; // or: export const revalidate = 0;
 
 // --- error helper ---
 function getErrorMessage(e: unknown): string {
