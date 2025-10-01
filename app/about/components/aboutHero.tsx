@@ -14,7 +14,7 @@ export default function AboutHero() {
       exit="exit"
       className="bg-gradient-to-b from-pumpkin-900 via-pumpkin-800 to-pumpkin-700"
     >
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-28">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-26 sm:py-28 lg:py-30">
         <M.div
           variants={revealUp}
           initial="hidden"
