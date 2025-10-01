@@ -2,17 +2,16 @@
   command = "npm run build"
   publish = ".next"
 
-# Use the Next.js plugin if not already set via UI
+# Next.js plugin
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
 [build.environment]
-  # Let Netlify know these keys will appear publicly in the client bundle
+  # These are intentionally public and will appear in client JS.
   SECRETS_SCAN_OMIT_KEYS = "NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY"
 
-  # OPTIONAL: if you want to omit paths instead (e.g., .netlify/.next/**), you could do:
+  # OPTIONAL: if scanning still flags paths in your cache/output, uncomment:
   # SECRETS_SCAN_OMIT_PATHS = ".netlify/.next/**,.next/**"
 
-  # NOT RECOMMENDED: disable scanning entirely
+  # ⚠️ Not recommended: fully disable scanning
   # SECRETS_SCAN_ENABLED = "false"
-  SECRETS_SCAN_OMIT_KEYS = "NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY"
