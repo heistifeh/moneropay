@@ -4,7 +4,7 @@ import { createServerClient } from "@supabase/ssr";
 
 export async function updateSession(request: NextRequest) {
   // Create a mutable response so Supabase can attach refreshed cookies
-  let response = NextResponse.next();
+  const response = NextResponse.next();
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
