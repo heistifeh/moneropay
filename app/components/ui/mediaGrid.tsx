@@ -29,7 +29,7 @@ export default function MediaGrid({
           alt="Publisher logo"
           width={100}
           height={100}
-          className="h-10 w-10 sm:h-10 sm:w-30"
+          className="h-10 w-25 sm:h-10 sm:w-30"
           sizes="48px"
         />
       </div>

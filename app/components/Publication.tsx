@@ -41,25 +41,25 @@ export default function Publication() {
             <M.div variants={slide("up", 24)}>
               <MediaGrid
                 imageUrl="/partners/coin-gape.svg"
-                text="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor."
+                text="SimpleSwap exchange offers its customers swift cryptocurrency exchanges without complex verification process."
               />
             </M.div>
             <M.div variants={slide("up", 28, 0.03)}>
               <MediaGrid
                 imageUrl="/partners/crypto-news.svg"
-                text="Integer facilisis, nibh in vulputate ultricies, augue massa interdum nunc."
+                text="The entire process of exchanging cryptocurrencies is quite intuitive and simple."
               />
             </M.div>
             <M.div variants={slide("up", 24, 0.06)}>
               <MediaGrid
                 imageUrl="/partners/crypto-slate.svg"
-                text="Phasellus congue, sapien at aliquet ultricies, justo urna commodo metus."
+                text="Since its creation in 2018, SimpleSwap has been committed to providing its customers with swift and secure cryptocurrency exchange services."
               />
             </M.div>
             <M.div variants={slide("up", 28, 0.09)}>
               <MediaGrid
                 imageUrl="/partners/money-mongers.svg"
-                text="Nunc at risus vitae ipsum tincidunt fermentum in quis turpis."
+                text="The main purpose of the platform is to make the crypto buying selling process simple safe, and comfortable."
               />
             </M.div>
           </div>
