@@ -44,13 +44,9 @@ export async function POST(req: NextRequest) {
     }
 
     // Validate amount_in -> number
-    const amtIn =
-      typeof amount_in === "number" ? amount_in : Number(amount_in);
+    const amtIn = typeof amount_in === "number" ? amount_in : Number(amount_in);
     if (!Number.isFinite(amtIn) || amtIn <= 0) {
-      return NextResponse.json(
-        { error: "Invalid amount_in" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid amount_in" }, { status: 400 });
     }
 
     // look up deposit address
@@ -147,7 +143,7 @@ export async function POST(req: NextRequest) {
           amount_out,
           deposit_address,
           expires_at,
-          status: "pending",
+          status: "awaiting_review",
         },
       ])
       .select()
@@ -158,9 +154,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(data, { status: 201 });
   } catch (e: unknown) {
     console.error("Quote creation error:", e);
-    return NextResponse.json(
-      { error: getErrorMessage(e) },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: getErrorMessage(e) }, { status: 500 });
   }
 }
