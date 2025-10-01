@@ -14,7 +14,9 @@ const DEPOSIT_ADDRS: Record<string, string | undefined> = {
   BTC: process.env.DEPOSIT_ADDR_BTC,
   ETH: process.env.DEPOSIT_ADDR_ETH,
   SOL: process.env.DEPOSIT_ADDR_SOL,
-  USDT: process.env.DEPOSIT_ADDR_USDT,
+  USDT_ETH: process.env.DEPOSIT_ADDR_USDT_ETH,
+  USDT_TRON: process.env.DEPOSIT_ADDR_USDT_TRON,
+  USDT_SOL: process.env.DEPOSIT_ADDR_USDT_SOL,
   USDC: process.env.DEPOSIT_ADDR_USDC,
   // add more as needed
 };
@@ -111,8 +113,17 @@ export async function POST(req: NextRequest) {
       BTC: "bitcoin",
       ETH: "ethereum",
       SOL: "solana",
+
+      // USDT (multi-chain)
       USDT: "tether",
+      USDT_ETH: "tether",
+      USDT_TRON: "tether",
+      USDT_SOL: "tether",
+
+      // USDC (multi-chain)
       USDC: "usd-coin",
+      USDC_ETH: "usd-coin",
+      USDC_SOL: "usd-coin",
     };
 
     const baseId = SYMBOL_TO_ID[base_symbol];
@@ -143,7 +154,7 @@ export async function POST(req: NextRequest) {
           amount_out,
           deposit_address,
           expires_at,
-          status: "awaiting_review",
+          status: "processing",
         },
       ])
       .select()

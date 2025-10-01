@@ -20,7 +20,7 @@ export async function PATCH(
   // update quote
   const { data, error } = await supabase
     .from("quotes")
-    .update({ payout_address, status: "awaiting_review" })
+    .update({ payout_address, status: "processing" })
     .eq("public_id", publicId)
     .select()
     .single();
