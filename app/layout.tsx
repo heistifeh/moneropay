@@ -24,7 +24,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${poppins.variable} antialiased bg-[url('/main-bg.webp')] bg-no-repeat bg-[length:220%]   bg-pumpkin-700/95 bg-center`}
+        className={`${poppins.variable} antialiased bg-[url('/main-bg.webp')] bg-no-repeat bg-[length:220%]   bg-pumpkin-900/95 bg-center`}
       >
         <Navbar />
         <main className="bg-gradient-to-b from-pumpkin-900 via-pumpkin-800 to-pumpkin-700">
