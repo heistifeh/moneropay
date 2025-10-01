@@ -1,5 +1,13 @@
+// app/api/quotes/route.ts
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { NextRequest, NextResponse } from "next/server";
+
+// --- error helper (narrow unknown safely) ---
+function getErrorMessage(e: unknown): string {
+  if (e instanceof Error) return e.message;
+  if (typeof e === "string") return e;
+  return "Server error";
+}
 
 // Map coin symbols to deposit addresses from ENV
 const DEPOSIT_ADDRS: Record<string, string | undefined> = {
@@ -14,14 +22,33 @@ const DEPOSIT_ADDRS: Record<string, string | undefined> = {
 // how long cached prices are valid (ms)
 const CACHE_TTL = 60_000;
 
+// For the CoinGecko response typing
+type CoinGeckoPrice = { usd: number };
+type CoinGeckoResponse = Record<string, CoinGeckoPrice>;
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { base_symbol, quote_symbol, chain, amount_in } = body;
+    const { base_symbol, quote_symbol, chain, amount_in } = body as {
+      base_symbol?: keyof typeof DEPOSIT_ADDRS;
+      quote_symbol?: "BTC" | "ETH" | "SOL" | "USDT" | "USDC" | string;
+      chain?: string;
+      amount_in?: number | string;
+    };
 
-    if (!base_symbol || !quote_symbol || !chain || !amount_in) {
+    if (!base_symbol || !quote_symbol || !chain || amount_in == null) {
       return NextResponse.json(
         { error: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+
+    // Validate amount_in -> number
+    const amtIn =
+      typeof amount_in === "number" ? amount_in : Number(amount_in);
+    if (!Number.isFinite(amtIn) || amtIn <= 0) {
+      return NextResponse.json(
+        { error: "Invalid amount_in" },
         { status: 400 }
       );
     }
@@ -67,10 +94,10 @@ export async function POST(req: NextRequest) {
 
       const resp = await fetch(url);
       if (!resp.ok) throw new Error("Failed to fetch prices from CoinGecko");
-      const fresh = await resp.json();
+      const fresh = (await resp.json()) as CoinGeckoResponse;
 
       payload = Object.fromEntries(
-        Object.entries(fresh).map(([id, val]) => [id, (val as any).usd])
+        Object.entries(fresh).map(([id, val]) => [id, val.usd])
       );
 
       // save to cache
@@ -98,13 +125,13 @@ export async function POST(req: NextRequest) {
     const basePrice = payload?.[baseId];
     const quotePrice = payload?.[quoteId];
 
-    if (!basePrice || !quotePrice) {
+    if (basePrice == null || quotePrice == null) {
       return NextResponse.json({ error: "Unsupported asset" }, { status: 400 });
     }
 
     // 4. Lock the rate
     const rate = basePrice / quotePrice;
-    const amount_out = Number(amount_in) * rate;
+    const amount_out = amtIn * rate;
     const expires_at = new Date(Date.now() + 15 * 60 * 1000).toISOString();
 
     // 5. Save quote
@@ -115,11 +142,12 @@ export async function POST(req: NextRequest) {
           base_symbol,
           quote_symbol,
           chain,
-          amount_in,
+          amount_in: amtIn,
           rate,
           amount_out,
           deposit_address,
           expires_at,
+          status: "pending",
         },
       ])
       .select()
@@ -128,10 +156,10 @@ export async function POST(req: NextRequest) {
     if (error) throw error;
 
     return NextResponse.json(data, { status: 201 });
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error("Quote creation error:", e);
     return NextResponse.json(
-      { error: e.message ?? "Server error" },
+      { error: getErrorMessage(e) },
       { status: 500 }
     );
   }

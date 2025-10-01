@@ -67,9 +67,15 @@ export default function FAQ() {
 
   const toggle = (i: number) => {
     if (allowMultiple) {
-      const next = new Set(openSet);
-      next.has(i) ? next.delete(i) : next.add(i);
-      setOpenSet(next);
+      setOpenSet((prev) => {
+        const next = new Set(prev);
+        if (next.has(i)) {
+          next.delete(i);
+        } else {
+          next.add(i);
+        }
+        return next;
+      });
     } else {
       setOpenIndex((prev) => (prev === i ? null : i));
     }
@@ -102,8 +108,8 @@ export default function FAQ() {
             Frequently Asked Questions
           </h1>
           <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-pumpkin-200/90 sm:text-base">
-            Everything you need to know about swapping with MoneroPay — security,
-            timing, fees, and support.
+            Everything you need to know about swapping with MoneroPay —
+            security, timing, fees, and support.
           </p>
         </M.div>
 

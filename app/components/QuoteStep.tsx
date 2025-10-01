@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { motion as m, AnimatePresence, LayoutGroup } from "framer-motion";
 import {
   VIEWPORT,
@@ -17,13 +17,13 @@ import { AssetSelect } from "./ui/assetSelect";
 import { useFlow } from "@/store/store";
 
 /** Helpers */
-const sanitizeAmount = (raw: string) => {
-  // allow digits + single dot
-  let v = raw.replace(/[^\d.]/g, "");
-  const parts = v.split(".");
-  if (parts.length > 2) v = `${parts[0]}.${parts.slice(1).join("")}`;
-  return v;
-};
+// const sanitizeAmount = (raw: string) => {
+//   // allow digits + single dot
+//   let v = raw.replace(/[^\d.]/g, "");
+//   const parts = v.split(".");
+//   if (parts.length > 2) v = `${parts[0]}.${parts.slice(1).join("")}`;
+//   return v;
+// };
 
 const toNumber = (v: string) => {
   const n = parseFloat(v);
@@ -64,15 +64,15 @@ export function QuoteStep() {
   const canExchange = !invalidAmount && !sameAsset && !loading;
 
   // computed refs (display only)
-  const rate = useMemo(() => {
-    if (!priceA || !priceB) return null;
-    return priceA / priceB;
-  }, [priceA, priceB]);
+  // const rate = useMemo(() => {
+  //   if (!priceA || !priceB) return null;
+  //   return priceA / priceB;
+  // }, [priceA, priceB]);
 
-  const estimatedOut = useMemo(() => {
-    if (!rate || Number.isNaN(amountNum)) return null;
-    return amountNum * rate;
-  }, [rate, amountNum]);
+  // const estimatedOut = useMemo(() => {
+  //   if (!rate || Number.isNaN(amountNum)) return null;
+  //   return amountNum * rate;
+  // }, [rate, amountNum]);
 
   // swap helper
   const onSwap = () => {
@@ -110,8 +110,8 @@ export function QuoteStep() {
   }, [lastUpdated]);
 
   // a11y ids
-  const sendLabelId = "send-label";
-  const getLabelId = "get-label";
+  // const sendLabelId = "send-label";
+  // const getLabelId = "get-label";
   const errorId = "quote-error";
 
   return (

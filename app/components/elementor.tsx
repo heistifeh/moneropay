@@ -3,10 +3,15 @@
 import Link from "next/link";
 import Image from "next/image";
 import { motion as M } from "framer-motion";
+import type { TargetAndTransition, Transition } from "framer-motion";
 import { ArrowRight } from "lucide-react";
-import { blurIn } from "../../utils/animation"; // your animation file (optional for entry)
+import { blurIn } from "../../utils/animation";
 
-const floatKf = (delay = 0) => ({
+// helper: returns props for a motion.div
+const floatKf = (delay = 0): {
+  initial: TargetAndTransition;
+  animate: TargetAndTransition;
+} => ({
   initial: { opacity: 0, y: 0, x: 0, rotate: 0 },
   animate: {
     opacity: 1,
@@ -16,15 +21,15 @@ const floatKf = (delay = 0) => ({
     transition: {
       duration: 7,
       repeat: Infinity,
-      ease: "easeInOut",
+      // Use a cubic-bezier to satisfy Transition typing
+      ease: [0.42, 0, 0.58, 1], // ≈ ease-in-out
       delay,
-    },
+    } as Transition,
   },
 });
 
 export default function Elementor() {
   return (
-    // If you need overlap with a hero, wrap this with a relative parent and keep the negative top on lg only.
     <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
       <M.div
         variants={blurIn}
@@ -36,9 +41,8 @@ export default function Elementor() {
           lg:absolute lg:left-0 lg:right-0 lg:top-[-100px]
         "
       >
-        {/* Layout: center content with floating logo columns shown only on lg+ */}
         <div className="grid grid-cols-1 items-center gap-6 lg:grid-cols-3">
-          {/* Left floating column (hidden until lg) */}
+          {/* Left floating column */}
           <div className="relative hidden h-full lg:block">
             <div className="pointer-events-none absolute inset-0">
               <M.div className="absolute left-2 top-2" {...floatKf(0)}>
@@ -77,7 +81,6 @@ export default function Elementor() {
             <p className="mx-auto mt-2 max-w-md text-sm sm:text-base">
               Just make the first exchange to see how easy and profitable it is.
             </p>
-
             <div className="mt-5">
               <Link
                 href="/exchange"
@@ -90,7 +93,7 @@ export default function Elementor() {
             </div>
           </div>
 
-          {/* Right floating column (hidden until lg) */}
+          {/* Right floating column */}
           <div className="relative hidden h-full lg:block">
             <div className="pointer-events-none absolute inset-0">
               <M.div className="absolute right-4 top-2" {...floatKf(0.9)}>

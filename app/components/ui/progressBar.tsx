@@ -34,7 +34,10 @@ export default memo(function ProgressBar() {
   const key = normalize(step, status);
   const i = activeIndexForKey(key);
   const max = STEPS.length - 1; // 2
-  const pct = useMemo(() => Math.max(0, Math.min(100, (i / max) * 100)), [i]);
+  const pct = useMemo(
+    () => Math.max(0, Math.min(100, (i / max) * 100)),
+    [i, max]
+  );
 
   const isError = key === "failed" || key === "expired";
   const isSuccess = key === "success";

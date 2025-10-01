@@ -2,7 +2,7 @@
 "use client";
 
 import { motion as M } from "framer-motion";
-import { pageTransition, revealUp, slide, VIEWPORT, lift } from "../../../utils/animation";
+import { pageTransition, revealUp, VIEWPORT, lift } from "../../../utils/animation";
 import Link from "next/link";
 
 export default function AboutHero() {

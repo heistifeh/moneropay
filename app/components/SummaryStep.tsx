@@ -8,7 +8,7 @@ import { useQuotePoller } from "@/hooks/useQuotePoller";
 import { useRouter } from "next/navigation";
 
 // icons + qr code
-import { ArrowRightLeft, Wallet, QrCode, Hash, RefreshCcw, Copy } from "lucide-react";
+import { ArrowRightLeft, Wallet, Hash, RefreshCcw, Copy } from "lucide-react";
 import QRCode from "react-qr-code";
 
 export default function SummaryStep() {
@@ -26,7 +26,7 @@ export default function SummaryStep() {
     } else if (quote.status === "expired") {
       router.replace("/expired");
     }
-  }, [quote?.status, router]);
+  }, [quote, router]);
 
   if (!quote) {
     return (

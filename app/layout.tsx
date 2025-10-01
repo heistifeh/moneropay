@@ -5,6 +5,7 @@ import Navbar from "./components/navbar";
 import Footer from "./components/footer";
 
 const poppins = Poppins({
+  subsets: ["latin"],
   weight: ["400", "700"],
   variable: "--font-poppins",
   display: "swap",

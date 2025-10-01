@@ -108,7 +108,7 @@ export default function DashboardPage() {
                   Created {new Date(q.created_at).toLocaleString()}
                 </p>
               </div>
-              <StatusBadge status={q.status as any} />
+              <StatusBadge status={q.status as Quote["status"]} />
             </CardHeader>
 
             <CardContent className="text-sm text-zinc-200 space-y-1">

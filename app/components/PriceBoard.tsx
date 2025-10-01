@@ -1,6 +1,5 @@
-// app/components/prices/PriceBoard.tsx
-import Image from "next/image";
-import { ALL_CG_IDS, ASSET_BY_ID, ASSETS } from "../../lib/constants";
+
+import { ALL_CG_IDS, ASSETS } from "../../lib/constants";
 import PriceCard from "./PriceCard";
 
 type PricesResp = Record<
