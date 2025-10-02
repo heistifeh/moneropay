@@ -11,7 +11,7 @@ export type Asset = {
 export const ASSETS: Asset[] = [
   { symbol: "BTC", name: "Bitcoin", id: "bitcoin" },
   { symbol: "ETH", name: "Ethereum", id: "ethereum" },
-  { symbol: "SOL", name: "Solana", id: "solana" },
+
   {
     symbol: "USDT-ETH",
     name: "Tether (Ethereum)",
@@ -33,7 +33,8 @@ export const ASSETS: Asset[] = [
     chain: "solana",
     contract: "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
   },
-  { symbol: "USDC", name: "USD Coin", id: "usd-coin" },
+
+  { symbol: "XRP", name: "Ripple", id: "ripple" },
 ];
 
 // --- quote assets (can be much larger) ---

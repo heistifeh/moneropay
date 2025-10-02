@@ -9,16 +9,13 @@ function getErrorMessage(e: unknown): string {
   return "Server error";
 }
 
-// Map coin symbols to deposit addresses from ENV
 const DEPOSIT_ADDRS: Record<string, string | undefined> = {
   BTC: process.env.DEPOSIT_ADDR_BTC,
   ETH: process.env.DEPOSIT_ADDR_ETH,
-  SOL: process.env.DEPOSIT_ADDR_SOL,
   USDT_ETH: process.env.DEPOSIT_ADDR_USDT_ETH,
   USDT_TRON: process.env.DEPOSIT_ADDR_USDT_TRON,
   USDT_SOL: process.env.DEPOSIT_ADDR_USDT_SOL,
-  USDC: process.env.DEPOSIT_ADDR_USDC,
-  // add more as needed
+  XRP: process.env.DEPOSIT_ADDR_XRP,
 };
 
 // how long cached prices are valid (ms)
@@ -33,7 +30,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { base_symbol, quote_symbol, chain, amount_in } = body as {
       base_symbol?: keyof typeof DEPOSIT_ADDRS;
-      quote_symbol?: "BTC" | "ETH" | "SOL" | "USDT" | "USDC" | string;
+      quote_symbol?: "BTC" | "ETH" | "USDT_ETH" | "USDT_TRON" | "USDT_SOL" | "XRP" | string;
       chain?: string;
       amount_in?: number | string;
     };

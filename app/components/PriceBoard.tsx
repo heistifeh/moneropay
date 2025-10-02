@@ -1,4 +1,3 @@
-
 import { ALL_CG_IDS, ASSETS } from "../../lib/constants";
 import PriceCard from "./PriceCard";
 
@@ -28,7 +27,8 @@ export default async function PriceBoard() {
 
   return (
     <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
-      <header className="mb-6 flex items-end justify-between">
+      {/* Section Header */}
+      <header className="mb-8 flex items-end justify-between">
         <div>
           <span className="inline-block rounded-full bg-pumpkin-600/20 px-3 py-1 text-xs font-semibold text-pumpkin-100">
             Live prices
@@ -37,22 +37,22 @@ export default async function PriceBoard() {
             Market at a glance
           </h2>
         </div>
-        <span className="hidden text-sm text-pumpkin-100/70 sm:block">
+        <span className="hidden text-sm text-zinc-400 sm:block">
           Updated every minute
         </span>
       </header>
 
       {/* Grid */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
         {ASSETS.map((a) => {
           const row = data?.[a.id];
+
           return (
             <PriceCard
               key={a.id}
               asset={a}
               price={row?.usd}
               change24h={row?.usd_24h_change}
-              // placeholder icons (swap to your paths)
               iconSrc={`/coins/${a.symbol.toLowerCase()}.svg`}
             />
           );
