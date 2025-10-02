@@ -18,7 +18,7 @@ export default function FailedPage() {
   }, [quote, router]);
 
   if (!quote || quote.status !== "failed") return null;
-
+//confused
   return (
     <div className="flex min-h-[calc(100vh-6rem)] items-center justify-center px-4 pt-25 pb-10">
       <m.div
