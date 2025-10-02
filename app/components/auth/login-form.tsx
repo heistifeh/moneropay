@@ -19,6 +19,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import toast from "react-hot-toast";
 import { z } from "zod";
 
 type FormData = z.infer<typeof loginSchema>;
@@ -42,6 +43,7 @@ export function LoginForm() {
 
     try {
       await login(data.email, data.password);
+      toast.success("Logged in successfully!");
       router.push("/dashboard");
     } catch (error) {
       setError(
