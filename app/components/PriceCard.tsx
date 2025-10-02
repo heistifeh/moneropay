@@ -1,4 +1,3 @@
-// app/components/prices/PriceCard.tsx
 "use client";
 
 import { motion as M } from "framer-motion";
@@ -8,9 +7,10 @@ import { cardHover, press, slide } from "../../utils/animation";
 
 function fmtUSD(n?: number) {
   if (n == null) return "—";
-  const opts: Intl.NumberFormatOptions = n >= 1
-    ? { style: "currency", currency: "USD", maximumFractionDigits: 2 }
-    : { style: "currency", currency: "USD", maximumFractionDigits: 6 };
+  const opts: Intl.NumberFormatOptions =
+    n >= 1
+      ? { style: "currency", currency: "USD", maximumFractionDigits: 2 }
+      : { style: "currency", currency: "USD", maximumFractionDigits: 6 };
   return new Intl.NumberFormat("en-US", opts).format(n);
 }
 
@@ -43,18 +43,19 @@ export default function PriceCard({
       transition={cardHover.transition}
       className="
         group relative overflow-hidden
-        rounded-2xl border border-white/5
-        bg-gradient-to-b from-pumpkin-900 via-pumpkin-800 to-pumpkin-700
-        p-4 shadow-sm
+        rounded-2xl border border-white/10
+        bg-zinc-900/80 backdrop-blur-sm
+        p-5 shadow-md
       "
     >
-      {/* subtle vignette */}
-      <div className="pointer-events-none absolute inset-0 opacity-30">
-        <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-pumpkin-500/20 blur-2xl" />
+      {/* Glow accent */}
+      <div className="pointer-events-none absolute inset-0 opacity-10">
+        <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-pumpkin-500 blur-3xl" />
       </div>
 
+      {/* Header */}
       <div className="flex items-center gap-3">
-        <div className="shrink-0 rounded-xl bg-[var(--color-pumpkin-100)] ring-1 ring-[var(--color-pumpkin-200)] p-2">
+        <div className="shrink-0 rounded-xl bg-zinc-800 p-2">
           <Image
             src={iconSrc}
             alt={`${asset.name} icon`}
@@ -64,36 +65,37 @@ export default function PriceCard({
           />
         </div>
         <div className="min-w-0">
-          <div className="text-sm font-semibold text-pumpkin-50">
+          <div className="text-sm font-semibold text-white">
             {asset.symbol}
-            <span className="ml-2 font-normal text-pumpkin-100/70">{asset.name}</span>
+            <span className="ml-2 font-normal text-zinc-400">
+              {asset.name}
+            </span>
           </div>
-          <div className="mt-1 text-base font-bold leading-6 text-pumpkin-50">
+          <div className="mt-1 text-lg font-bold leading-6 text-white">
             {fmtUSD(price)}
           </div>
         </div>
       </div>
 
+      {/* Footer */}
       <div className="mt-4 flex items-center justify-between">
-        {/* 24h chip */}
-        <M.span
-          animate={{ y: up ? [0, -2, 0] : [0, 2, 0] }}
-          transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+        {/* 24h Change Chip */}
+        <span
           className={`
             inline-flex items-center rounded-lg px-2 py-1 text-xs font-semibold
-            ring-1
+            border
             ${up
-              ? "bg-green-500/15 text-green-300 ring-green-500/30"
-              : "bg-red-500/15 text-red-300 ring-red-500/30"}
+              ? "bg-green-500/15 text-green-400 border-green-500/30"
+              : "bg-red-500/15 text-red-400 border-red-500/30"}
           `}
         >
           {fmtPct(change24h)}
-        </M.span>
+        </span>
 
-        {/* CTA-ish micro-link (placeholder) */}
+        {/* Placeholder micro-link */}
         <a
           href="#"
-          className="text-xs font-semibold text-pumpkin-100/80 underline decoration-pumpkin-300/60 underline-offset-4 hover:text-pumpkin-50"
+          className="text-xs font-semibold text-pumpkin-300 underline decoration-pumpkin-500 underline-offset-4 hover:text-pumpkin-100"
         >
           Trade
         </a>

@@ -1,5 +1,7 @@
 "use client";
 
+import { Toaster } from "react-hot-toast";
+
 export default function AdminLayout({
   children,
 }: {
@@ -7,8 +9,9 @@ export default function AdminLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-black">
+      <body className="">
         <main className="">{children}</main>
+       <Toaster/>
       </body>
     </html>
   );

@@ -1,0 +1,7 @@
+
+<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="128" cy="128" r="128" fill="#26A17B"/>
+  <text x="50%" y="52%" text-anchor="middle" fill="white" font-family="Arial" font-size="96" font-weight="bold">T</text>
+  <circle cx="200" cy="200" r="40" fill="#FF060A"/>
+  <text x="200" y="210" text-anchor="middle" fill="white" font-family="Arial" font-size="28" font-weight="bold">TRX</text>
+</svg>

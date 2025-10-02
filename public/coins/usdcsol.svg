@@ -1,0 +1,13 @@
+<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="128" cy="128" r="128" fill="#2775CA"/>
+  <text x="50%" y="52%" text-anchor="middle" fill="white" font-family="Arial" font-size="96" font-weight="bold">C</text>
+  <circle cx="200" cy="200" r="40" fill="url(#solGradient)"/>
+  <text x="200" y="210" text-anchor="middle" fill="white" font-family="Arial" font-size="26" font-weight="bold">SOL</text>
+  <defs>
+    <linearGradient id="solGradient" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#9945FF"/>
+      <stop offset="50%" stop-color="#19FB9B"/>
+      <stop offset="100%" stop-color="#00BBFF"/>
+    </linearGradient>
+  </defs>
+</svg>

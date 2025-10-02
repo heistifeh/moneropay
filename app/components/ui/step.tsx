@@ -62,7 +62,6 @@ export default function Step({
             className="
               text-sm sm:text-base text-black-700
               leading-6 sm:leading-7 tracking-normal
-              break-words [overflow-wrap:anywhere]
               max-w-[48ch]
             "
           >

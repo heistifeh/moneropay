@@ -3,6 +3,7 @@ import { Poppins } from "next/font/google";
 import "./globals.css";
 import Navbar from "./components/navbar";
 import Footer from "./components/footer";
+import { Toaster } from "react-hot-toast";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -29,6 +30,7 @@ export default function RootLayout({
         <Navbar />
         <main className="bg-gradient-to-b from-pumpkin-900 via-pumpkin-800 to-pumpkin-700">
           {children}
+        <Toaster/>
         </main>
         <Footer />
       </body>
