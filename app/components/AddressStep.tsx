@@ -109,7 +109,7 @@ export default function AddressStep() {
       next();
     } catch (err) {
       console.error("Failed to attach payout:", err);
-      setError("Backend error: could not save payout address.");
+      setError("please try again, something went wrong");
     } finally {
       setLoading(false);
     }

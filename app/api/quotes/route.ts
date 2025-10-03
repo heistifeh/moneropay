@@ -1,54 +1,51 @@
 // app/api/quotes/route.ts
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { NextRequest, NextResponse } from "next/server";
+import { ASSET_BY_SYMBOL, ALL_CG_IDS } from "@/lib/constants";
 
-// --- error helper (narrow unknown safely) ---
+// --- error helper ---
 function getErrorMessage(e: unknown): string {
   if (e instanceof Error) return e.message;
   if (typeof e === "string") return e;
   return "Server error";
 }
 
+// --- deposit addresses you actually support ---
 const DEPOSIT_ADDRS: Record<string, string | undefined> = {
   BTC: process.env.DEPOSIT_ADDR_BTC,
   ETH: process.env.DEPOSIT_ADDR_ETH,
-  USDT_ETH: process.env.DEPOSIT_ADDR_USDT_ETH,
-  USDT_TRON: process.env.DEPOSIT_ADDR_USDT_TRON,
-  USDT_SOL: process.env.DEPOSIT_ADDR_USDT_SOL,
+  "USDT-ETH": process.env.DEPOSIT_ADDR_USDT_ETH,
+  "USDT-TRON": process.env.DEPOSIT_ADDR_USDT_TRON,
+  "USDT-SOL": process.env.DEPOSIT_ADDR_USDT_SOL,
   XRP: process.env.DEPOSIT_ADDR_XRP,
+  // add more when ready
 };
 
-// how long cached prices are valid (ms)
-const CACHE_TTL = 60_000;
+// cache TTL
+const CACHE_TTL = 60_000; // 1 min
 
-// For the CoinGecko response typing
-type CoinGeckoPrice = { usd: number };
-type CoinGeckoResponse = Record<string, CoinGeckoPrice>;
-
+// --- API handler ---
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { base_symbol, quote_symbol, chain, amount_in } = body as {
-      base_symbol?: keyof typeof DEPOSIT_ADDRS;
-      quote_symbol?: "BTC" | "ETH" | "USDT_ETH" | "USDT_TRON" | "USDT_SOL" | "XRP" | string;
+      base_symbol?: string;
+      quote_symbol?: string;
       chain?: string;
       amount_in?: number | string;
     };
 
     if (!base_symbol || !quote_symbol || !chain || amount_in == null) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // Validate amount_in -> number
+    // amount_in validation
     const amtIn = typeof amount_in === "number" ? amount_in : Number(amount_in);
     if (!Number.isFinite(amtIn) || amtIn <= 0) {
       return NextResponse.json({ error: "Invalid amount_in" }, { status: 400 });
     }
 
-    // look up deposit address
+    // ensure deposit address is configured
     const deposit_address = DEPOSIT_ADDRS[base_symbol];
     if (!deposit_address) {
       return NextResponse.json(
@@ -59,7 +56,7 @@ export async function POST(req: NextRequest) {
 
     const sb = supabaseAdmin();
 
-    // 1. Try get latest price cache
+    // 1. Try cached price
     const { data: cache, error: cacheErr } = await sb
       .from("price_cache")
       .select("*")
@@ -67,9 +64,7 @@ export async function POST(req: NextRequest) {
       .limit(1)
       .single();
 
-    if (cacheErr) {
-      console.error("Failed to read price_cache:", cacheErr);
-    }
+    if (cacheErr) console.warn("price_cache read failed:", cacheErr);
 
     let payload: Record<string, number> | null = null;
 
@@ -80,22 +75,22 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 2. If cache is stale, fetch from CoinGecko
+    // 2. If stale, fetch fresh from CG
     if (!payload) {
-      const ids = ["bitcoin", "ethereum", "solana", "tether", "usd-coin"]; // expand as needed
+      const ids = Array.from(new Set(ALL_CG_IDS)); // dedupe!
       const url = `https://api.coingecko.com/api/v3/simple/price?ids=${ids.join(
         ","
       )}&vs_currencies=usd`;
 
       const resp = await fetch(url);
       if (!resp.ok) throw new Error("Failed to fetch prices from CoinGecko");
-      const fresh = (await resp.json()) as CoinGeckoResponse;
 
+      const fresh = (await resp.json()) as Record<string, { usd: number }>;
       payload = Object.fromEntries(
         Object.entries(fresh).map(([id, val]) => [id, val.usd])
       );
 
-      // save to cache
+      // store cache
       await sb.from("price_cache").insert([
         {
           payload,
@@ -105,40 +100,23 @@ export async function POST(req: NextRequest) {
       ]);
     }
 
-    // 3. Map symbols to ids
-    const SYMBOL_TO_ID: Record<string, string> = {
-      BTC: "bitcoin",
-      ETH: "ethereum",
-      SOL: "solana",
+    // 3. Resolve IDs from constants
+    const baseId = ASSET_BY_SYMBOL[base_symbol]?.id;
+    const quoteId = ASSET_BY_SYMBOL[quote_symbol]?.id;
 
-      // USDT (multi-chain)
-      USDT: "tether",
-      USDT_ETH: "tether",
-      USDT_TRON: "tether",
-      USDT_SOL: "tether",
-
-      // USDC (multi-chain)
-      USDC: "usd-coin",
-      USDC_ETH: "usd-coin",
-      USDC_SOL: "usd-coin",
-    };
-
-    const baseId = SYMBOL_TO_ID[base_symbol];
-    const quoteId = SYMBOL_TO_ID[quote_symbol];
-
-    const basePrice = payload?.[baseId];
-    const quotePrice = payload?.[quoteId];
+    const basePrice = baseId ? payload?.[baseId] : null;
+    const quotePrice = quoteId ? payload?.[quoteId] : null;
 
     if (basePrice == null || quotePrice == null) {
       return NextResponse.json({ error: "Unsupported asset" }, { status: 400 });
     }
 
-    // 4. Lock the rate
+    // 4. Compute rate + output
     const rate = basePrice / quotePrice;
     const amount_out = amtIn * rate;
     const expires_at = new Date(Date.now() + 15 * 60 * 1000).toISOString();
 
-    // 5. Save quote
+    // 5. Save quote to DB
     const { data, error } = await sb
       .from("quotes")
       .insert([
