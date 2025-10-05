@@ -18,6 +18,7 @@ const DEPOSIT_ADDRS: Record<string, string | undefined> = {
   "USDT-TRON": process.env.DEPOSIT_ADDR_USDT_TRON,
   "USDT-SOL": process.env.DEPOSIT_ADDR_USDT_SOL,
   XRP: process.env.DEPOSIT_ADDR_XRP,
+ XMR: process.env.DEPOSIT_ADDR_XMR,
   // add more when ready
 };
 
