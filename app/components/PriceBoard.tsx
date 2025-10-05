@@ -1,4 +1,4 @@
-import { ALL_CG_IDS, ASSETS } from "../../lib/constants";
+import { ALL_CG_IDS, ASSETS, QUOTE_ASSETS } from "../../lib/constants";
 import PriceCard from "./PriceCard";
 
 type PricesResp = Record<string, { usd: number; usd_24h_change?: number }>;
@@ -22,6 +22,8 @@ export default async function PriceBoard() {
     data = null; // graceful fallback – skeletons render
   }
 
+  const exclude = ["USDT", "USDC", "XRP", "DOGE", "AVAX", "ADA"]; // list of coins to skip
+
   return (
     <section className="mx-auto w-full px-4 sm:px-6 lg:px-8 py-10 bg-transparent">
       <div className="mx-auto max-w-7xl backdrop-blur-lg bg-white/5 rounded-2xl p-6 shadow-lg">
@@ -42,19 +44,23 @@ export default async function PriceBoard() {
 
         {/* Grid */}
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
-          {ASSETS.map((a) => {
-            const row = data?.[a.id];
 
-            return (
-              <PriceCard
-                key={a.id}
-                asset={a}
-                price={row?.usd}
-                change24h={row?.usd_24h_change}
-                iconSrc={`/coins/${a.symbol.toLowerCase()}.svg`}
-              />
-            );
-          })}
+{QUOTE_ASSETS
+  .filter((a) => !exclude.some((ex) => a.symbol.startsWith(ex)))
+  .map((a) => {
+    
+    const row = data?.[a.id];
+    return (
+      <PriceCard
+        key={a.id}
+        asset={a}
+        price={row?.usd}
+        change24h={row?.usd_24h_change}
+        iconSrc={`/coins/${a.symbol.toLowerCase()}.svg`}
+      />
+    );
+  })}
+
         </div>
       </div>
     </section>

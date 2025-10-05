@@ -34,6 +34,7 @@ export const ASSETS: Asset[] = [
     contract: "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
   },
 
+  { symbol: "XMR", name: "Monero", id: "monero" },
   { symbol: "XRP", name: "Ripple", id: "ripple" },
 ];
 
