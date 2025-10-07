@@ -60,6 +60,7 @@ export async function POST(request: NextRequest) {
           }),
         });
         break;
+        
 
       case "password-reset-confirmation":
         const loginUrl = origin
