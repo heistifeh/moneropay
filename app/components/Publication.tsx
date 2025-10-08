@@ -41,7 +41,7 @@ export default function Publication() {
             <M.div variants={slide("up", 24)}>
               <MediaGrid
                 imageUrl="/partners/coin-gape.svg"
-                text="SimpleSwap exchange offers its customers swift cryptocurrency exchanges without complex verification process."
+                text="MoneroPay exchange offers its customers swift cryptocurrency exchanges without complex verification process."
               />
             </M.div>
             <M.div variants={slide("up", 28, 0.03)}>
@@ -53,7 +53,7 @@ export default function Publication() {
             <M.div variants={slide("up", 24, 0.06)}>
               <MediaGrid
                 imageUrl="/partners/crypto-slate.svg"
-                text="Since its creation in 2018, SimpleSwap has been committed to providing its customers with swift and secure cryptocurrency exchange services."
+                text="Since its creation in 2018, MoneroPay has been committed to providing its customers with swift and secure cryptocurrency exchange services."
               />
             </M.div>
             <M.div variants={slide("up", 28, 0.09)}>

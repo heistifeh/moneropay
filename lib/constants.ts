@@ -41,6 +41,7 @@ export const ASSETS: Asset[] = [
 // --- quote assets (can be much larger) ---
 export const QUOTE_ASSETS: Asset[] = [
   // core L1s
+  { symbol: "XMR", name: "Monero", id: "monero" },
   { symbol: "BTC", name: "Bitcoin", id: "bitcoin" },
   { symbol: "ETH", name: "Ethereum", id: "ethereum" },
   { symbol: "SOL", name: "Solana", id: "solana" },
