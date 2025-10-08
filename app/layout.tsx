@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "MoneroPay",
     description: "Secure and Private Cryptocurrency Payments",
-    url: "https://yourdomain.com",
+    url: "https://moneropay.net",
     siteName: "MoneroPay",
     images: [
       {
