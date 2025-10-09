@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { motion as m, LayoutGroup } from "framer-motion";
 import { VIEWPORT, listItem, inViewStagger } from "@/utils/animation";
 import { useFlow } from "@/store/store";
@@ -13,6 +13,7 @@ import QRCode from "react-qr-code";
 
 export default function SummaryStep() {
   const { quote, txHash, userReceiveAddress, reset } = useFlow();
+  const [hasConfirmed, setHasConfirmed] = useState(false);
 
   useQuotePoller(quote?.public_id);
   const router = useRouter();
@@ -35,7 +36,9 @@ export default function SummaryStep() {
         animate={{ opacity: 1, y: 0 }}
         className="mx-auto w-full max-w-md rounded-3xl bg-white p-6 shadow"
       >
-        <p className="text-zinc-700">No active quote. Please start a new exchange.</p>
+        <p className="text-zinc-700">
+          No active quote. Please start a new exchange.
+        </p>
         <m.button
           onClick={reset}
           className="mt-4 inline-flex items-center gap-2 rounded-xl border border-zinc-200 px-4 py-2 hover:bg-zinc-50"
@@ -79,8 +82,8 @@ export default function SummaryStep() {
                 quote.status === "success"
                   ? "text-green-600"
                   : ["failed", "expired"].includes(quote.status)
-                  ? "text-rose-600"
-                  : "text-pumpkin-600"
+                    ? "text-rose-600"
+                    : "text-pumpkin-600"
               }`}
             >
               {quote.status}
@@ -102,7 +105,8 @@ export default function SummaryStep() {
             {formatNum(quote.amount_out)} {quote.quote_symbol}
           </p>
           <p className="text-xs text-zinc-500">
-            Rate locked: 1 {quote.base_symbol} = {formatNum(quote.rate)} {quote.quote_symbol}
+            Rate locked: 1 {quote.base_symbol} = {formatNum(quote.rate)}{" "}
+            {quote.quote_symbol}
           </p>
         </m.section>
 
@@ -139,6 +143,24 @@ export default function SummaryStep() {
                 </div>
               </div>
             )}
+
+            {/* CONFIRMATION BUTTON */}
+            <div className="mt-4 text-center space-y-2">
+              <p className="text-sm text-zinc-600">
+                Click the button below to further confirm your payment.
+              </p>
+              <button
+                onClick={() => setHasConfirmed(true)}
+                disabled={hasConfirmed}
+                className={`inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-all ${
+                  hasConfirmed
+                    ? "bg-zinc-200 text-zinc-500 cursor-not-allowed"
+                    : "bg-pumpkin-600 text-white hover:bg-pumpkin-700"
+                }`}
+              >
+                {hasConfirmed ? "Processing..." : "I Have Made the Payment"}
+              </button>
+            </div>
           </div>
 
           {/* Payout */}
